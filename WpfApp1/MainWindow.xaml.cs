@@ -143,6 +143,17 @@ namespace gangway_controller
             MessageBox.Show("未开发");
         }
         #region 主推
+        private void mainmotor_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+
+        }
         private int _currentValue0 = 0; // 假设当前值为整数 
         private void Send_Click_zhutui(object sender, RoutedEventArgs e)
         {
@@ -196,13 +207,40 @@ namespace gangway_controller
 
         private void stop_Click_zhutui(object sender, RoutedEventArgs e)
         {
-
+            if (serialport2.IsOpen)
+            {
+                MCU[1] = 0x01;
+                MCU[4] = 0x02;
+                MCU[8] = 0x24;
+                MCU[5] = 0x0A;
+                if (MCU[6] == 0) { MCU[6] = 0x5A; }
+                if (MCU[7] == 0) { MCU[7] = 0x5A; }
+                try
+                {
+                    if (check_ARM.IsChecked == false)
+                    {
+                        serialport2.Write(MCU, 0, 9);
+                    }
+                    else
+                    {
+                        serialport2.Write(MCU, 2, 7);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                }
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
         }
         private async void DecrementButton_Click0(object sender, RoutedEventArgs e)
         {
             if (serialport2.IsOpen)
             {
-                if (_currentValue0 > 0 ) // 防止减到负数（如果需要）  
+                if (_currentValue0 > 0) // 防止减到负数（如果需要）  
                 {
                     MCU[1] = 0x01;
                     MCU[4] = 0x02;
@@ -290,7 +328,7 @@ namespace gangway_controller
                     {
                         if (check_ARM.IsChecked == false)
                         {
-                           await Task.Run(()=> serialport2.Write(MCU, 0, 9));
+                            await Task.Run(() => serialport2.Write(MCU, 0, 9));
                         }
                         else
                         {
@@ -314,8 +352,44 @@ namespace gangway_controller
                 MessageBox.Show("请打开串口");
             }
         }
+
+
+
+        private void send_content_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+
+
         #endregion
         #region 舵
+        private void horizontal_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+
+        private void vertical_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
 
         private void shuipingSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -336,7 +410,7 @@ namespace gangway_controller
         {
             if (shuiping_slider.Value >= 60 && shuiping_slider.Value <= 120)
             {
-               // horizontal.Text = ((int)shuiping_slider.Value).ToString();
+                // horizontal.Text = ((int)shuiping_slider.Value).ToString();
                 if (serialport2.IsOpen)
                 {
                     MCU[1] = 0x01;
@@ -349,7 +423,7 @@ namespace gangway_controller
                     {
                         if (check_ARM.IsChecked == false)
                         {
-                           await Task.Run(() => serialport2.Write(MCU, 0, 9));
+                            await Task.Run(() => serialport2.Write(MCU, 0, 9));
                         }
                         else
                         {
@@ -382,14 +456,14 @@ namespace gangway_controller
                         //shuiping_slider.InvalidateVisual();
                         if (serialport2.IsOpen)
                         {
-                     
 
-                        MCU[1] = 0x01;
-                        MCU[4] = 0x02;
-                        MCU[8] = 0x24;
-                        if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
-                        if (MCU[7] == 0x00) { MCU[7] = 0x5A; }
-                        MCU[6] = (byte)value;
+
+                            MCU[1] = 0x01;
+                            MCU[4] = 0x02;
+                            MCU[8] = 0x24;
+                            if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
+                            if (MCU[7] == 0x00) { MCU[7] = 0x5A; }
+                            MCU[6] = (byte)value;
 
                             try
                             {
@@ -413,7 +487,7 @@ namespace gangway_controller
                         {
                             MessageBox.Show("请打开串口");
                         }
-                      
+
                     }
                     else
                     {
@@ -424,9 +498,9 @@ namespace gangway_controller
                 {
                     MessageBox.Show("请输入有效的数字");
                 }
-                
+
             }
-           
+
             else
             {
                 MessageBox.Show("请输入有效的数字");
@@ -452,7 +526,7 @@ namespace gangway_controller
         private async void Thumb_DragCompleted_chuizhi(object sender, DragCompletedEventArgs e)
         {
             if (shuiping_slider.Value >= 60 && shuiping_slider.Value <= 120)
-            { 
+            {
                 if (serialport2.IsOpen)
                 {
                     MCU[1] = 0x01;
@@ -493,7 +567,7 @@ namespace gangway_controller
                     if (value >= 60 && value <= 120)
                     {
                         //shuiping_slider.ValueChanged -= shuipingSlider_ValueChanged;
-                       chuizhi_slider.Value = value;
+                        chuizhi_slider.Value = value;
                         // shuiping_slider.ValueChanged += shuipingSlider_ValueChanged;
                         //shuiping_slider.InvalidateVisual();
                         if (serialport2.IsOpen)
@@ -549,6 +623,89 @@ namespace gangway_controller
             }
 
         }
+
+
+        private async void stop_Click_shuipingDuo(object sender, RoutedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+                MCU[1] = 0x01;
+                MCU[4] = 0x02;
+                MCU[8] = 0x24;
+                if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
+                MCU[6] = 0x5A;
+                if (MCU[7] == 0x00) { MCU[7] = 0x5A; }
+
+                try
+                {
+                    if (check_ARM.IsChecked == false)
+                    {
+                        await Task.Run(() => serialport2.Write(MCU, 0, 9));
+
+                    }
+                    else
+                    {
+                        await Task.Run(() => serialport2.Write(MCU, 2, 7));
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                }
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+
+        private async  void stop_Click_chuizhiDuo(object sender, RoutedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+                MCU[1] = 0x01;
+                MCU[4] = 0x02;
+                MCU[8] = 0x24;
+                if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
+                if (MCU[6] == 0x00) { MCU[6] = 0x5A; }
+                MCU[7] = 0x5A;
+                try
+                {
+                    if (check_ARM.IsChecked == false)
+                    {
+                        await Task.Run(() => serialport2.Write(MCU, 0, 9));
+
+                    }
+                    else
+                    {
+                        await Task.Run(() => serialport2.Write(MCU, 2, 7));
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                }
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+
+        #endregion
+        #region 侧推
+        private void Send_Click_cetui(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("未开发");
+        }
+        private void stop_Click_cetui(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("未开发");
+        }
+
+
         #endregion
 
 
@@ -559,27 +716,88 @@ namespace gangway_controller
 
 
 
+        #region ARM
 
-
-        private void Send_Click_cetui(object sender, RoutedEventArgs e)
+        private async void StopArm(object sender, RoutedEventArgs e)
         {
+            if (serialport2.IsOpen)
+            {
+                MCU[1] = 0x02;
+                MCU[4] = 0x04;
+                MCU[5] = 0x18;
+                MCU[6] = 0x00;
+                MCU[23] = 0xFF;
+                MCU[25] = 0xFE;
+                int ans = 0xFA + 0xAF + 0x04 + 0x18 + 0xFF;
+                MCU[24] = (byte)ans;
+                for (int i = 7; i < 23; i++)
+                {
+                    MCU[i] = 0x00;
+                }
+                try
+                {
+                    
+                    if (check_ARM.IsChecked == false)
+                    {
+                        await Task.Run(() => serialport2.Write(MCU, 0, 32));
+                    }
+                    else
+                    {
+                        await Task.Run(() => serialport2.Write(MCU, 2, 24));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                }
 
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+        private void shouder_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+        private void dabi_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+        private void xiaobi_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+        private void wanbu_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
         }
 
-        private void stop_Click_shuipingDuo(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void stop_Click_chuizhiDuo(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void stop_Click_cetui(object sender, RoutedEventArgs e)
-        {
-
-        }
 
         private void Send_Click_jian(object sender, RoutedEventArgs e)
         {
@@ -647,8 +865,6 @@ namespace gangway_controller
             }
         }
 
-
-
         private void Send_Click_big(object sender, RoutedEventArgs e)
         {
             //板子判断
@@ -659,7 +875,6 @@ namespace gangway_controller
                 MCU[4] = 0x04;
                 MCU[5] = 0x18;
                 MCU[6] = 0x00;
-
                 MCU[25] = 0xFE;
                 try
                 {
@@ -700,6 +915,8 @@ namespace gangway_controller
                         {
                             serialport2.Write(MCU, 2, 24);
                         }
+                        MessageBox.Show("发送成功");
+
                         isFloatConversionSuccessful = false;
                     }
                     catch (Exception ex)
@@ -905,8 +1122,11 @@ namespace gangway_controller
                 MessageBox.Show("请打开串口");
             }
         }
-        
 
-  
+        #endregion
+
+   
+
+
     }
 }

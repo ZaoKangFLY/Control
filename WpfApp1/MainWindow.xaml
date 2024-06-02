@@ -53,14 +53,14 @@
             </GroupBox.RenderTransform>
             <Canvas   Margin="0,0,0,-9"  >
                 <Label Content="主推" Canvas.Left="20" Canvas.Top="14" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <TextBox x:Name="mainmotor" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="17"  Width="60"/>
+                <TextBox x:Name="mainmotor" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="17"  Width="60" TextChanged="mainmotor_TextChanged"/>
                 <Label Content="水平舵" Canvas.Left="19" Canvas.Top="44" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox x:Name="horizontal" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="49"  Width="60" />
+                <TextBox x:Name="horizontal" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="49"  Width="60" TextChanged="horizontal_TextChanged" />
                 <Label Content="垂直舵" Canvas.Left="19" Canvas.Top="77" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox x:Name="vertical" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="90" Canvas.Top="84" Width="60"/>
+                <TextBox x:Name="vertical" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="90" Canvas.Top="84" Width="60" TextChanged="vertical_TextChanged"/>
                 <Label Content="侧推" Canvas.Left="19" Canvas.Top="114" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <TextBox x:Name="lateral" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="90" Canvas.Top="118" Width="60"/>
-                <TextBox x:Name="send_content" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Top"  Canvas.Left="33" Canvas.Top="166" Width="303" Height="34"/>
+                <TextBox x:Name="send_content" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Top"  Canvas.Left="33" Canvas.Top="166" Width="303" Height="34" TextChanged="send_content_TextChanged"/>
                 <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Width="109" Canvas.Left="165" Canvas.Top="16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -156,10 +156,11 @@
                 <Label Content="小臂" Canvas.Left="28" Canvas.Top="112" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 <Label Content="腕部" Canvas.Left="27" Canvas.Top="140" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
                 <Label Content="手抓" Canvas.Left="27" Canvas.Top="174" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <TextBox x:Name="shouder" Canvas.Left="79" Canvas.Top="51" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162"/>
-                <TextBox x:Name="dabi" Canvas.Left="79" Canvas.Top="83" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162"/>
-                <TextBox x:Name="xiaobi" Canvas.Left="78" Canvas.Top="115" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162"/>
-                <TextBox x:Name="wanbu" Canvas.Left="79" Canvas.Top="148" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162"/>
+                <TextBox x:Name="shouder" Canvas.Left="79" Canvas.Top="51" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="shouder_TextChanged"/>
+                <TextBox x:Name="dabi" Canvas.Left="79" Canvas.Top="83" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="dabi_TextChanged"  />
+                <TextBox x:Name="xiaobi" Canvas.Left="78" Canvas.Top="115" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="xiaobi_TextChanged"/>
+                <TextBox x:Name="wanbu" Canvas.Left="79" Canvas.Top="148" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="wanbu_TextChanged" />
+                <Button x:Name="StopAllArm" Content="停机" Canvas.Left="251" Canvas.Top="14" Click="StopArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Background="#FFE47C7C" FontWeight="Bold"/>
                 <Button x:Name="Send4" Content="发送" Canvas.Left="251" Canvas.Top="49" Click="Send_Click_jian" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75"/>
                 <Button x:Name="Send5" Content="发送" Canvas.Left="251" Canvas.Top="83" Click="Send_Click_big" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75"/>
                 <Button x:Name="Send6" Content="发送" Canvas.Left="251" Canvas.Top="115" Click="Send_Click_samll" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75"/>
