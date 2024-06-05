@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34202.233
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfApp1", "WpfApp1\WpfApp1.csproj", "{CC637763-6AFD-431D-8CF2-8120DB7FB95E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UVMS", "WpfApp1\UVMS.csproj", "{CC637763-6AFD-431D-8CF2-8120DB7FB95E}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SetupDemo", "SetupDemo\SetupDemo.vdproj", "{F4D3A8DF-E800-48FC-A403-56037C6162EF}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Send", "Send\Send.vdproj", "{9E2C61FD-BE0C-43E4-AE6D-AAD4DCA2354C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,8 +17,8 @@ Global
 		{CC637763-6AFD-431D-8CF2-8120DB7FB95E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC637763-6AFD-431D-8CF2-8120DB7FB95E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC637763-6AFD-431D-8CF2-8120DB7FB95E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F4D3A8DF-E800-48FC-A403-56037C6162EF}.Debug|Any CPU.ActiveCfg = Debug
-		{F4D3A8DF-E800-48FC-A403-56037C6162EF}.Release|Any CPU.ActiveCfg = Release
+		{9E2C61FD-BE0C-43E4-AE6D-AAD4DCA2354C}.Debug|Any CPU.ActiveCfg = Debug
+		{9E2C61FD-BE0C-43E4-AE6D-AAD4DCA2354C}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

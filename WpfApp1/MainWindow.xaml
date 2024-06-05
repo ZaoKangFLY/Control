@@ -5,19 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:gangway_controller"
         mc:Ignorable="d"
-        Title="UVMS" Height="588" Width="951"  FontFamily="FangSong" FontSize="20">
+        Title="UVMS" Height="637" Width="1031"  FontFamily="FangSong" FontSize="20">
+
+
+
 
     <Grid>
-
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="511*"/>
-            <ColumnDefinition Width="440*"/>
+            <ColumnDefinition Width="497*"/>
+            <ColumnDefinition Width="534*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="167*"/>
-            <RowDefinition Height="180*"/>
+            <RowDefinition Height="169*"/>
+            <RowDefinition Height="142*"/>
         </Grid.RowDefinitions>
-        <GroupBox Header="串口参数初始化" HorizontalAlignment="Center" VerticalAlignment="Center" Height="205" Width="460"  FontFamily="FangSong" >
+
+        <GroupBox Header="      串口参数初始化"  HorizontalAlignment="Center"  VerticalAlignment="Top" Height="216" Width="460"  FontFamily="FangSong" Margin="0,38,0,0" >
             <Canvas   Margin="0,0,0,7"  >
                 <Label    Content="端口号" HorizontalAlignment="Left"   FontFamily="FangSong" VerticalAlignment="Center" Canvas.Top="20" Canvas.Left="18"/>
                 <Label Content="波特率" HorizontalAlignment="Center"   FontFamily="FangSong" VerticalAlignment="Center" Canvas.Left="18" Canvas.Top="62"/>
@@ -42,7 +45,43 @@
                 <Ellipse x:Name="status" Fill="Red" Height="18" Canvas.Left="275" Stroke="Black" Canvas.Top="122" Width="18"/>
             </Canvas>
         </GroupBox>
-        <GroupBox Header="动力控制" HorizontalAlignment="Left" VerticalAlignment="Top" Height="238" Width="459"  FontFamily="FangSong" RenderTransformOrigin="0.5,0.5" Grid.Row="1" Margin="29,9,0,0">
+
+        <!-- 接收数据显示的 TextBox -->
+        <TextBox x:Name="ReceiveTextBox" 
+         HorizontalAlignment="Left" 
+         VerticalAlignment="Top" 
+         Width="394" 
+         Height="202" 
+         Margin="83,38,0,0" 
+         TextWrapping="Wrap" 
+         VerticalScrollBarVisibility="Auto" 
+         AcceptsReturn="True" 
+         IsReadOnly="True" 
+         Foreground="Black" 
+         Background="White" 
+         Grid.Column="1"  />
+
+
+
+        <CheckBox x:Name="check_ASCII"  Canvas.Left="208" Canvas.Top="115" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="26,132,0,0" IsChecked="False" Checked="check_ASCII_Checked">
+            <CheckBox.LayoutTransform>
+                <ScaleTransform ScaleX="2" ScaleY="2"  ></ScaleTransform>
+            </CheckBox.LayoutTransform>
+        </CheckBox>
+
+        <CheckBox x:Name="check_HEX"  Canvas.Left="208" Canvas.Top="115" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="26,68,0,0" Checked="check_HEX_Checked">
+            <CheckBox.LayoutTransform>
+                <ScaleTransform ScaleX="2" ScaleY="2"  ></ScaleTransform>
+            </CheckBox.LayoutTransform>
+        </CheckBox>
+        <Label Content="ASCII" Canvas.Left="20" Canvas.Top="14" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="13,99,0,0" Height="33" Width="62"/>
+        <Label Content="HEX" Canvas.Left="20" Canvas.Top="14" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="22,34,0,0" Height="32" Width="40" RenderTransformOrigin="0.425,0.589"/>
+        <Button x:Name="clc" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_content" Width="68" Margin="10,173,0,0" Height="27" Grid.Column="1" />
+        <Button x:Name="save" Content="保存" HorizontalAlignment="Left" VerticalAlignment="Top" Click="save_Click_content" Width="68" Margin="10,211,0,0" Height="27" Grid.Column="1" />
+        <Button x:Name="clc_send" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_send" Width="71" Margin="415,286,0,0" Height="27" Grid.Column="1" />
+
+
+        <GroupBox Header="动力控制" HorizontalAlignment="Center" VerticalAlignment="Center" Height="268" Width="458"  FontFamily="FangSong" RenderTransformOrigin="0.5,0.5" Grid.Row="1">
             <GroupBox.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform/>
@@ -53,14 +92,13 @@
             </GroupBox.RenderTransform>
             <Canvas   Margin="0,0,0,-9"  >
                 <Label Content="主推" Canvas.Left="20" Canvas.Top="14" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top"/>
-                <TextBox x:Name="mainmotor" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="17"  Width="60" TextChanged="mainmotor_TextChanged"/>
+                <TextBox x:Name="mainmotor" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="17"  Width="60" />
                 <Label Content="水平舵" Canvas.Left="19" Canvas.Top="44" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox x:Name="horizontal" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="49"  Width="60" TextChanged="horizontal_TextChanged" />
+                <TextBox x:Name="horizontal" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="90" Canvas.Top="49"  Width="60"  />
                 <Label Content="垂直舵" Canvas.Left="19" Canvas.Top="77" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox x:Name="vertical" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="90" Canvas.Top="84" Width="60" TextChanged="vertical_TextChanged"/>
+                <TextBox x:Name="vertical" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="90" Canvas.Top="84" Width="60" />
                 <Label Content="侧推" Canvas.Left="19" Canvas.Top="114" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <TextBox x:Name="lateral" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="90" Canvas.Top="118" Width="60"/>
-                <TextBox x:Name="send_content" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Top"  Canvas.Left="33" Canvas.Top="166" Width="303" Height="34" TextChanged="send_content_TextChanged"/>
                 <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Width="109" Canvas.Left="165" Canvas.Top="16">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -75,7 +113,9 @@
                     <TextBox x:Name="NumericTextBox0" Grid.Column="1" Text="0" VerticalAlignment="Center" Margin="33,0,17,0" Height="25"/>
                     <Button Content="+" Grid.Column="1" Click="IncrementButton_Click0" Margin="67,0,6,0" Height="27" VerticalAlignment="Center" Grid.ColumnSpan="2"/>
                 </Grid>
-                <CheckBox x:Name="check_left"  Canvas.Left="208" Canvas.Top="115" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Label Content="左" Canvas.Left="155" Canvas.Top="115" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="1" Height="33" Width="38"/>
+                <Label Content="右" Canvas.Left="217" Canvas.Top="115" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="1" Height="33" Width="38"/>
+                <CheckBox x:Name="check_left"  Canvas.Left="180" Canvas.Top="115" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top">
                     <CheckBox.LayoutTransform>
                         <ScaleTransform ScaleX="2" ScaleY="2"  ></ScaleTransform>
                     </CheckBox.LayoutTransform>
@@ -89,7 +129,6 @@
                 <Button x:Name="Send1" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="289" Canvas.Top="50" Click="Send_Click_shuipingDuo" Width="68" ></Button>
                 <Button x:Name="Send2" Content="发送" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="289" Canvas.Top="82" Click="Send_Click_chuizhiDuo" Width="68" ></Button>
                 <Button x:Name="Send3" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="289" Canvas.Top="117" Click="Send_Click_cetui" Width="68" ></Button>
-                <Button x:Name="Send" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="345" Canvas.Top="172" Click="Send_Click_all" Width="71" ></Button>
                 <Button x:Name="stop_0" Content="停止" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="387" Canvas.Top="17" Click="stop_Click_zhutui" ></Button>
                 <Button x:Name="stop_1" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="387" Canvas.Top="48" Click="stop_Click_shuipingDuo" ></Button>
                 <Button x:Name="stop_2" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="386" Canvas.Top="83" Click="stop_Click_chuizhiDuo" ></Button>
@@ -142,37 +181,61 @@
 
 
 
-        <GroupBox Header="机械臂控制" Margin="24,10,30,47" Grid.Row="1" Grid.Column="1"  >
+        <GroupBox Header="机械臂控制" Margin="24,10,30,10" Grid.Row="1" Grid.Column="1"  >
 
-            <Canvas Height="217" Margin="-21,0,0,0"  >
-                <CheckBox x:Name="check_ARM"  Canvas.Left="36" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Top="11">
-                    <CheckBox.LayoutTransform>
-                        <ScaleTransform ScaleX="2" ScaleY="2"  ></ScaleTransform>
-                    </CheckBox.LayoutTransform>
-                </CheckBox>
-                <Label Content="仅机械臂发送命令" Canvas.Left="73" Canvas.Top="11" FontFamily="FangSong" Width="180" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <Label Content="肩部" Canvas.Left="27" Canvas.Top="48" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label Content="大臂" Canvas.Left="27" Canvas.Top="79" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label Content="小臂" Canvas.Left="28" Canvas.Top="112" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label Content="腕部" Canvas.Left="27" Canvas.Top="140" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <Label Content="手抓" Canvas.Left="27" Canvas.Top="174" FontFamily="FangSong" Width="51" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                <TextBox x:Name="shouder" Canvas.Left="79" Canvas.Top="51" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="shouder_TextChanged"/>
-                <TextBox x:Name="dabi" Canvas.Left="79" Canvas.Top="83" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="dabi_TextChanged"  />
-                <TextBox x:Name="xiaobi" Canvas.Left="78" Canvas.Top="115" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="xiaobi_TextChanged"/>
-                <TextBox x:Name="wanbu" Canvas.Left="79" Canvas.Top="148" HorizontalAlignment="Center" VerticalAlignment="Top" Width="162" TextChanged="wanbu_TextChanged" />
-                <Button x:Name="StopAllArm" Content="停机" Canvas.Left="251" Canvas.Top="14" Click="StopArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Background="#FFE47C7C" FontWeight="Bold"/>
-                <Button x:Name="Send4" Content="发送" Canvas.Left="251" Canvas.Top="49" Click="Send_Click_jian" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75"/>
-                <Button x:Name="Send5" Content="发送" Canvas.Left="251" Canvas.Top="83" Click="Send_Click_big" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75"/>
-                <Button x:Name="Send6" Content="发送" Canvas.Left="251" Canvas.Top="115" Click="Send_Click_samll" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75"/>
-                <Button x:Name="Send7" Content="发送" Canvas.Left="251" Canvas.Top="148" Click="Send_Click_wan" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75"/>
-                <Button x:Name="Send8" Content="合" Canvas.Left="229" Canvas.Top="179" Click="Send_Click_zhua_close" HorizontalAlignment="Center" VerticalAlignment="Top" Width="48"/>
-                <Button x:Name="Send9" Content="开" Canvas.Left="301" Canvas.Top="179" Click="Send_Click_zhua_open" RenderTransformOrigin="4.931,1.217" HorizontalAlignment="Center" VerticalAlignment="Top" Width="50"/>
+            <Canvas Height="222" Margin="10,0,17,0"  >
+                <Label Content="肩部" Canvas.Left="5" Canvas.Top="49" FontFamily="FangSong" Width="51" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Label Content="大臂" Canvas.Left="5" Canvas.Top="87" FontFamily="FangSong" Width="51" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Label Content="小臂" Canvas.Left="5" Canvas.Top="122" FontFamily="FangSong" Width="51" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Label Content="腕部" Canvas.Left="5" Canvas.Top="155" FontFamily="FangSong" Width="51" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <Label Content="手抓" Canvas.Left="146" Canvas.Top="188" FontFamily="FangSong" Width="51" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBox x:Name="shouder" Canvas.Left="56" Canvas.Top="54" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="28"/>
+                <TextBox x:Name="dabi" Canvas.Left="56" Canvas.Top="87" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75"  Height="28"  />
+                <TextBox x:Name="xiaobi" Canvas.Left="56" Canvas.Top="122" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75"  Height="28"/>
+                <TextBox x:Name="wanbu" Canvas.Left="56" Canvas.Top="157" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75"  Height="28" />
+
+                <Button Content="-" Grid.Column="0" Click="DecrementButton_Click_jian" Grid.ColumnSpan="2" Canvas.Left="202" Canvas.Top="55" HorizontalAlignment="Left" VerticalAlignment="Top" Width="29"/>
+                <TextBox x:Name="DIshouder" Canvas.Left="231" Canvas.Top="55" HorizontalAlignment="Center" VerticalAlignment="Center" Width="41"  Height="27"  />
+                <Button Content="+" Grid.Column="1" Click="IncrementButton_Click_jian" Height="27" VerticalAlignment="Top" Grid.ColumnSpan="2" Canvas.Left="272" Canvas.Top="55" HorizontalAlignment="Left" Width="30"/>
+
+                <Button Content="-" Click="DecrementButton_Click_big" Canvas.Left="202" Canvas.Top="89" Width="29" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBox x:Name="DIdabi" Canvas.Left="231" Canvas.Top="89" HorizontalAlignment="Left" VerticalAlignment="Top" Width="41"  Height="28" />
+                <Button Content="+" Click="IncrementButton_Click_big" Height="27" Canvas.Left="272" Canvas.Top="89" Width="30" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+                <Button Content="-" Click="DecrementButton_Click_samll" Canvas.Left="202" Canvas.Top="124" Width="29" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBox x:Name="DIxiaobi" Canvas.Left="231" Canvas.Top="124" HorizontalAlignment="Left" VerticalAlignment="Top" Width="41"  Height="28" />
+                <Button Content="+" Click="IncrementButton_Click_small" Height="27" Canvas.Left="272" Canvas.Top="124" Width="30" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+                <Button Content="-" Click="DecrementButton_Click_wan" Canvas.Left="202" Canvas.Top="159" Width="29" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                <TextBox x:Name="DIwanbu" Canvas.Left="231" Canvas.Top="158" HorizontalAlignment="Left" VerticalAlignment="Top" Width="41"  Height="28" />
+                <Button Content="+" Click="IncrementButton_Click_wan" Height="27" Canvas.Left="272" Canvas.Top="159" Width="30" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+
+
+                <Button x:Name="RemakeAllArm" Content="复位" Canvas.Left="60" Canvas.Top="10" Click="ReamkeArm" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75" Background="#FFF5FB8E" FontWeight="Bold"/>
+                <Button x:Name="StopAllArm" Content="停机" Canvas.Left="151" Canvas.Top="10" Click="StopArm" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75" Background="#FFE47C7C" FontWeight="Bold"/>
+                <Button x:Name="SendAllArm" Content="发送" Canvas.Left="61" Canvas.Top="191" Click="SendArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Background="#FFDDDDDD" FontWeight="Bold"/>
+                <Button x:Name="Send4" Content="发送" Canvas.Left="136" Canvas.Top="55" Click="Send_Click_jian" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
+                <Button x:Name="Send5" Content="发送" Canvas.Left="136" Canvas.Top="88" Click="Send_Click_big" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
+                <Button x:Name="Send6" Content="发送" Canvas.Left="136" Canvas.Top="122" Click="Send_Click_samll" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
+                <Button x:Name="Send7" Content="发送" Canvas.Left="136" Canvas.Top="157" Click="Send_Click_wan" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
+                <Button x:Name="Send8" Content="合" Canvas.Left="202" Canvas.Top="191" Click="Send_Click_zhua_close" HorizontalAlignment="Center" VerticalAlignment="Center" Width="48"/>
+                <Button x:Name="Send9" Content="开" Canvas.Left="255" Canvas.Top="191" Click="Send_Click_zhua_open" RenderTransformOrigin="4.931,1.217" HorizontalAlignment="Left" VerticalAlignment="Center" Width="50"/>
+
             </Canvas>
 
         </GroupBox>
-        <Image Margin="108,47,114,58" Grid.Column="1" Grid.Row="0" >
+        <TextBox x:Name="send_content" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Top" Width="384" Height="61"  Grid.Column="1" Margin="13,252,0,0"/>
+        <Button x:Name="Send" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Send_Click_all" Width="71" Grid.Column="1" Margin="415,252,0,0" Height="28" RenderTransformOrigin="-0.662,1.134" />
+        <Image Margin="-1,10,419,252" Grid.Column="0" Grid.Row="0" >
             <Image.Source>1.jpg</Image.Source>
         </Image>
+        <CheckBox x:Name="check_ARM" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="238,279,0,0" IsChecked="True" >
+            <CheckBox.LayoutTransform>
+                <ScaleTransform ScaleX="2" ScaleY="2"  />
+            </CheckBox.LayoutTransform>
+        </CheckBox>
+        <Label Content="不经PC104发送命令" FontFamily="FangSong" Width="180" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="47,278,0,0" Height="33"/>
+
 
 
     </Grid>

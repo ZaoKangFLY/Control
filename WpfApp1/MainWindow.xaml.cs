@@ -11,9 +11,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using System.IO.Ports;//串口的名称空间
+using System.IO.Ports;
 using System.IO;
 using System.Windows.Controls.Primitives;
+using System.Diagnostics.Eventing.Reader;
+using System.Text.RegularExpressions;
 
 namespace gangway_controller
 {
@@ -26,8 +28,22 @@ namespace gangway_controller
         int bmq_tmp = 0;
         SerialPort serialport2 = new SerialPort();
         public byte[] MCU = new byte[32];//8位无符号整数
-        private bool isFloatConversionSuccessful = false;
-        private bool isInitialized = false; // 初始化标志
+        public byte[] SEND = new byte[32];//8位无符号整数
+        private bool isInitialized = false; // 防止初始化就刷新
+       
+
+        public BMQ()
+        {
+            InitializeComponent();
+            SerialInit();
+            MCU[0] = 0xAA;
+            MCU[2] = 0xFA;
+            MCU[3] = 0xAF;
+            check_HEX.IsChecked = true;
+            // 初始化完成，设置标志为 true
+            isInitialized = true;
+        }
+        //校验和
         public static byte CalculateSumChecksum(byte[] Cmd, int startIndex, int endIndex)
         {
             if (startIndex < 0 || endIndex >= Cmd.Length || startIndex > endIndex)
@@ -44,25 +60,15 @@ namespace gangway_controller
             // 仅取低8位
             return (byte)(sum & 0xFF);
         }
-
-        public BMQ()
-        {
-            InitializeComponent();
-            SerialInit();
-            MCU[0] = 0xAA;
-            MCU[2] = 0xFA;
-            MCU[3] = 0xAF;
-            // 初始化完成，设置标志为 true
-            isInitialized = true;
-        }
+        //窗口关闭时关闭串口
         private void Window_Closed(object sender, EventArgs e)
         {
             if (serialport2.IsOpen)
             {
                 serialport2.Close();
             }
-        }
-
+        } 
+        #region 串口
         private void SerialInit()
         {
             ComboBox_Baud.Items.Add("9600");//19200、38400、57600
@@ -71,7 +77,7 @@ namespace gangway_controller
             ComboBox_Baud.Items.Add("57600");
             ComboBox_Baud.Items.Add("115200");
             ComboBox_Baud.Items.Add("500000");
-            ComboBox_Baud.Text = "19200";
+            ComboBox_Baud.Text = "115200";
             string[] name = SerialPort.GetPortNames();
             ComboBox_COM.Items.Clear();
             for (int i = 0; i < name.Length; i++)
@@ -85,9 +91,9 @@ namespace gangway_controller
             ComboBox_Baud_Copy1.Items.Add("Odd");
             ComboBox_Baud_Copy2.Items.Add("1bit");
             ComboBox_Baud_Copy.Text = "8bit";
-            ComboBox_Baud_Copy1.Text = "Even";
+            ComboBox_Baud_Copy1.Text = "None";
             ComboBox_Baud_Copy2.Text = "1bit";
-
+            serialport2.DataReceived += SerialPort_DataReceived;
 
         }//串口初始化  
 
@@ -136,24 +142,201 @@ namespace gangway_controller
                 MessageBox.Show(e7.Message);
             }
         }
-        // AA 01 FA AF 02 20 5A 5A 24
-        //AA 02 FA AF 04 18 00 00 00 00 00 00 00 B4 42 00 00 B4 42 00 00 00 00 00 B1 FE 00 00 00 00 08 17
-        private void Send_Click_all(object sender, RoutedEventArgs e)
+        #endregion
+        #region 通用
+        private bool IsHexString(string input)
         {
-            MessageBox.Show("未开发");
+            // 检查字符串是否仅包含十六进制字符，并且长度是偶数
+            Regex hexRegex = new Regex("^[0-9A-Fa-f]+$");
+            return hexRegex.IsMatch(input) && (input.Length % 2 == 0);
         }
-        #region 主推
-        private void mainmotor_TextChanged(object sender, TextChangedEventArgs e)
+        private /*async*/ void Send_Click_all(object sender, RoutedEventArgs e)
         {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
+            if (!serialport2.IsOpen)
             {
                 MessageBox.Show("请打开串口");
+                return;
+            }
+            if (check_HEX.IsChecked == false)
+            {
+                string inputASCII = send_content.Text;
+                if (string.IsNullOrEmpty(inputASCII))
+                {
+                    MessageBox.Show("请输入有效的ASCII字符串");
+                    return;
+                }
+                try
+                {
+                    Send9.IsEnabled = false; // 禁用按钮
+
+                    // 将 ASCII 字符串转换为 UTF-8 字节数组
+                    byte[] utf8Bytes = Encoding.UTF8.GetBytes(inputASCII);
+
+                    // 发送 UTF-8 字节数组
+                    /* await Task.Run(() =>*/
+                    serialport2.Write(utf8Bytes, 0, utf8Bytes.Length)/*)*/;
+
+                    // MessageBox.Show("发送成功");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                }
+                finally
+                {
+                    Send9.IsEnabled = true; // 重新启用按钮
+                }
+            }
+            else 
+            {
+                 string inputHEX = send_content.Text.Replace(" ", "");
+                if (!IsHexString(inputHEX))
+                {
+                    MessageBox.Show("请输入有效的HEX字符串");
+                    return;
+                }
+
+
+                try
+                {
+                    Send9.IsEnabled = false; // 禁用按钮
+
+                    int byteCount = inputHEX.Length / 2;
+                    for (int i = 0; i < byteCount; i++)
+                    {
+                        SEND[i] = Convert.ToByte(inputHEX.Substring(i * 2, 2), 16);
+                    }
+
+                    /* await Task.Run(() =>*/
+                    serialport2.Write(SEND, 0, byteCount)/*)*/;
+
+                    // MessageBox.Show("发送成功");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                }
+                finally
+                {
+                    Send9.IsEnabled = true; // 重新启用按钮
+                }
             }
 
+           
+        
         }
+
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            try
+            {
+                // 从串口读取现有的数据
+                byte[] buffer = new byte[serialport2.BytesToRead]; // 创建一个数组，其大小等于当前可读取的字节数  
+                int numBytesRead = serialport2.Read(buffer, 0, buffer.Length); // 读取数据到数组中  
+
+                //转换为十六进制字符串  
+                string hexData = BitConverter.ToString(buffer).Replace("-", " ");
+                // 创建一个字符数组来存储转换后的ASCII字符  
+               /* char[] asciiChars = new char[numBytesRead];*/
+
+                this.Dispatcher.Invoke(() =>                // 在UI线程上执行以下代码，以便更新UI元素
+                {
+                    // 如果选中了HEX显示选项
+                    if (check_HEX.IsChecked == true)
+                    {
+                        // 将接收到的数据转换为十六进制字符串
+                        // string hexData = BitConverter.ToString(Encoding.ASCII.GetBytes(receivedData)).Replace("-", " ");
+                        // 将转换后的十六进制字符串追加到接收文本框中
+                        ReceiveTextBox.AppendText(hexData + "\n");
+                    }
+                    else if (check_ASCII.IsChecked == true)
+                    {
+                      /*  for (int i = 0; i < numBytesRead; i++)
+                        {
+                            asciiChars[i] = (char)buffer[i];
+                        }*/
+                        string receivedData = Encoding.UTF8.GetString(buffer, 0, numBytesRead);
+                        ReceiveTextBox.AppendText(receivedData + "\n");
+                      /*  string asciiString = new string(asciiChars);
+                        // 将接收到的原始数据追加到接收文本框中
+                        ReceiveTextBox.AppendText(asciiString + "\n");*/
+
+                    }
+                    // 确保文本框自动滚动到最后一行
+                    ReceiveTextBox.ScrollToEnd();
+                });
+            }
+            catch (Exception ex)
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"接收数据时发生错误: {ex.Message}");
+                });
+            }
+        }
+
+        private void clc_Click_send(object sender, RoutedEventArgs e)
+        {
+            send_content.Clear();
+        }
+
+        private void check_HEX_Checked(object sender, RoutedEventArgs e)
+        {
+            if (check_HEX.IsChecked == true)
+            {
+                check_ASCII.IsChecked = false;
+            }
+        }
+
+        private void check_ASCII_Checked(object sender, RoutedEventArgs e)
+        {
+            if (check_ASCII.IsChecked == true)
+            {
+                check_HEX.IsChecked = false;
+            }
+        }
+        private void save_Click_content(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = "ReceivedData",
+                DefaultExt = ".txt",
+                Filter = "Text documents (.txt)|*.txt"
+            };
+
+            bool? result = saveFileDialog.ShowDialog();
+
+            if (result == true)
+            {
+                string filename = saveFileDialog.FileName;
+                try
+                {
+                    File.WriteAllText(filename, ReceiveTextBox.Text);
+                    MessageBox.Show("数据已保存");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"保存数据时发生错误: {ex.Message}");
+                }
+            }
+        }
+
+        private void clc_Click_content(object sender, RoutedEventArgs e)
+        {
+            ReceiveTextBox.Clear();
+        }
+
+     
+
+       
+
+
+
+
+
+        #endregion
+        #region 主推
+
         private int _currentValue0 = 0; // 假设当前值为整数 
         private void Send_Click_zhutui(object sender, RoutedEventArgs e)
         {
@@ -225,6 +408,7 @@ namespace gangway_controller
                     {
                         serialport2.Write(MCU, 2, 7);
                     }
+                    NumericTextBox0.Text = "0";
                 }
                 catch (Exception ex)
                 {
@@ -353,48 +537,19 @@ namespace gangway_controller
             }
         }
 
-
-
-        private void send_content_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
-        }
+     
 
 
         #endregion
         #region 舵
-        private void horizontal_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
-        }
+    
 
-        private void vertical_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
-        }
+   
 
         private void shuipingSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!isInitialized) return; // 如果未初始化完毕，不执行事件处理
-            if (serialport2.IsOpen)
+            if (serialport2.IsOpen )
             {
                 if (shuiping_slider.Value >= 60 && shuiping_slider.Value <= 120)
                 {
@@ -441,7 +596,7 @@ namespace gangway_controller
                 }
             }
         }
-        private async void Send_Click_shuipingDuo(object sender, RoutedEventArgs e)
+        private /*async*/ void Send_Click_shuipingDuo(object sender, RoutedEventArgs e)
         {
 
             if (horizontal.Text != "")
@@ -467,20 +622,25 @@ namespace gangway_controller
 
                             try
                             {
+                                Send3.IsEnabled = false;
                                 if (check_ARM.IsChecked == false)
                                 {
-                                    await Task.Run(() => serialport2.Write(MCU, 0, 9));
+                                    /*await Task.Run(() => */serialport2.Write(MCU, 0, 9)/*)*/;
 
                                 }
                                 else
                                 {
-                                    await Task.Run(() => serialport2.Write(MCU, 2, 7));
+                                    /*await Task.Run(() => */serialport2.Write(MCU, 2, 7)/*)*/;
 
                                 }
                             }
                             catch (Exception ex)
                             {
                                 MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                            }
+                            finally
+                            {
+                                Send3.IsEnabled = true;
                             }
                         }
                         else
@@ -648,6 +808,8 @@ namespace gangway_controller
                         await Task.Run(() => serialport2.Write(MCU, 2, 7));
 
                     }
+                    shuiping_slider.Value = 90;
+                    horizontal.Text = "0";
                 }
                 catch (Exception ex)
                 {
@@ -682,6 +844,9 @@ namespace gangway_controller
                         await Task.Run(() => serialport2.Write(MCU, 2, 7));
 
                     }
+                    chuizhi_slider.Value = 90;
+                    vertical.Text = "0";
+                 
                 }
                 catch (Exception ex)
                 {
@@ -707,157 +872,253 @@ namespace gangway_controller
 
 
         #endregion
-
-
-
-
-
-
-
-
-
         #region ARM
-
-        private async void StopArm(object sender, RoutedEventArgs e)
+        public void ARMinit()
         {
-            if (serialport2.IsOpen)
+            MCU[1] = 0x02;
+            MCU[4] = 0x04;
+            MCU[5] = 0x18;
+            MCU[6] = 0x00;
+            MCU[25] = 0xFE;
+        }
+     
+        
+        #region 功能
+        private void ReamkeArm(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
             {
-                MCU[1] = 0x02;
-                MCU[4] = 0x04;
-                MCU[5] = 0x18;
-                MCU[6] = 0x00;
-                MCU[23] = 0xFF;
-                MCU[25] = 0xFE;
-                int ans = 0xFA + 0xAF + 0x04 + 0x18 + 0xFF;
-                MCU[24] = (byte)ans;
-                for (int i = 7; i < 23; i++)
+                MessageBox.Show("串口未打卡!");
+                return;
+            }
+            ARMinit();
+            MCU[23] = 0xFF;
+            int ans = 0xFA + 0xAF + 0x04 + 0x18;
+            MCU[24] = (byte)ans;
+            for (int i = 7; i < 24; i++)
+            {
+                MCU[i] = 0x00;
+            }
+            shouder.Text = "";
+            dabi.Text = "";
+            xiaobi.Text = "";
+            wanbu.Text = "";
+            try
+            {
+                RemakeAllArm.IsEnabled = false;
+                if (check_ARM.IsChecked == false)
                 {
-                    MCU[i] = 0x00;
+                    /*await Task.Run(() =>*/
+                    serialport2.Write(MCU, 0, 32)/*)*/;
                 }
-                try
+                else
                 {
-                    
-                    if (check_ARM.IsChecked == false)
+                    /*await Task.Run(() => */
+                    serialport2.Write(MCU, 2, 24)/*)*/;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+            }
+            finally
+            {
+                RemakeAllArm.IsEnabled = true;
+            }
+            MessageBox.Show("所有输入已经复位，请重新输入！");
+
+        }
+        private /*async*/ void StopArm(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("串口未打卡!");
+                return;
+            }
+            ARMinit();
+            MCU[23] = 0xFF;
+            int ans = 0xFA + 0xAF + 0x04 + 0x18 + 0xFF;
+            MCU[24] = (byte)ans;
+            for (int i = 7; i < 23; i++)
+            {
+                MCU[i] = 0x00;
+            }
+            try
+            {
+                StopAllArm.IsEnabled = false;
+                if (check_ARM.IsChecked == false)
+                {
+                    /*await Task.Run(() =>*/
+                    serialport2.Write(MCU, 0, 32)/*)*/;
+                }
+                else
+                {
+                    /*await Task.Run(() => */
+                    serialport2.Write(MCU, 2, 24)/*)*/;
+                }
+                // MessageBox.Show("已经停机，全部重新初始化");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+            }
+            finally
+            {
+                StopAllArm.IsEnabled = true;
+            }
+
+            
+           
+        }
+        private void SendArm(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            else if (shouder.Text == "" && dabi.Text == "" && xiaobi.Text == "" && wanbu.Text == "")
+            {
+                MessageBox.Show("请至少输入一个");
+                return;
+            }
+            if (shouder.Text == "") { shouder.Text = "0"; }
+            if (dabi.Text =="") { dabi.Text = "0"; }
+            if (xiaobi.Text == "")  { xiaobi.Text = "0"; }
+            if (wanbu.Text == "")  { wanbu.Text = "0"; }                 
+            // 获取输入文本
+            string shouderInput = shouder.Text;
+            string dabiInput = dabi.Text;
+            string xiaobiInput = xiaobi.Text;
+            string wanbuInput = wanbu.Text;
+
+            ARMinit();
+
+            // 检查并转换所有浮点数输入
+            bool isFloatConversionSuccessful = true;
+
+            // 转换和检查函数
+            void ConvertAndCheckInput(string inputText, int startIndex)
+            {
+                if (float.TryParse(inputText, out float floatValue))
+                {
+                    if (floatValue <= 180 && floatValue >= -180)
                     {
-                        await Task.Run(() => serialport2.Write(MCU, 0, 32));
+                        byte[] floatBytes = BitConverter.GetBytes(floatValue);
+                        Array.Copy(floatBytes, 0, MCU, startIndex, floatBytes.Length);
                     }
                     else
                     {
-                        await Task.Run(() => serialport2.Write(MCU, 2, 24));
+                        MessageBox.Show("超出范围！");
+                        isFloatConversionSuccessful = false;
+                        return;
+                    }
+                }
+                else
+                {
+                    isFloatConversionSuccessful = false;
+                    MessageBox.Show("请输入有效的浮点数。");
+                    return;
+                }
+            }
+
+            // 转换四个输入文本
+            ConvertAndCheckInput(shouderInput, 6);
+            if (!isFloatConversionSuccessful) return;
+
+            ConvertAndCheckInput(dabiInput, 10);
+            if (!isFloatConversionSuccessful) return;
+
+            ConvertAndCheckInput(xiaobiInput, 14);
+            if (!isFloatConversionSuccessful) return;
+
+            ConvertAndCheckInput(wanbuInput, 18);
+            if (!isFloatConversionSuccessful) return;
+
+            // 计算校验和
+            MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+
+            // 如果所有转换都成功，尝试通过串口发送数据
+            if (isFloatConversionSuccessful)
+            {
+                try
+                {
+                    if (check_ARM.IsChecked == false)
+                    {
+                        serialport2.Write(MCU, 0, 32);
+                    }
+                    else
+                    {
+                        serialport2.Write(MCU, 2, 24);
                     }
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"发送数据时发生错误: {ex.Message}");
                 }
-
             }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
+           
         }
-        private void shouder_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
-        }
-        private void dabi_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
-        }
-        private void xiaobi_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
-        }
-        private void wanbu_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-            }
-            else
-            {
-                MessageBox.Show("请打开串口");
-            }
-        }
-
-
+        #endregion
+        #region 输入发送
         private void Send_Click_jian(object sender, RoutedEventArgs e)
         {
             //板子判断
             if (serialport2.IsOpen)
             {
                 string inputText = shouder.Text;
-                MCU[1] = 0x02;
-                MCU[4] = 0x04;
-                MCU[5] = 0x18;
-                MCU[6] = 0x00;
-
-                MCU[25] = 0xFE;
+                ARMinit();
                 try
                 {
                     // 尝试将字符串转换为浮点数
                     if (float.TryParse(inputText, out float floatValue))
                     {
-                        // 将浮点数转换为字节数组（IEEE 754格式）
-                        byte[] floatBytes = BitConverter.GetBytes(floatValue);
+                        if(floatValue <= 180 && floatValue >= -180)
+                       { // 将浮点数转换为字节数组（IEEE 754格式）
+                            byte[] floatBytes = BitConverter.GetBytes(floatValue);
 
-                        // 将字节数组的内容复制到MCU数组，从索引6开始
-                        Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
-                        MCU[24] = CalculateSumChecksum(MCU, 2, 23);
-                        isFloatConversionSuccessful = true;
+                            // 将字节数组的内容复制到MCU数组，从索引6开始
+                            Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
+                            MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                            try
+                            {
+                                if (check_ARM.IsChecked == false)
+                                {
+                                    serialport2.Write(MCU, 0, 32);
+                                }
+                                else
+                                {
+                                    serialport2.Write(MCU, 2, 24);
+                                }
+                               
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                               
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("超出范围！");
+                            return;
 
+                        }
                     }
                     else
                     {
-                        isFloatConversionSuccessful = false;
-                        MessageBox.Show("请输入有效的浮点数。");
+                        
+                        MessageBox.Show("请输入。");
                     }
 
 
                 }
                 catch (Exception ex)
                 {
-                    isFloatConversionSuccessful = false;
+  
                     MessageBox.Show($"转换发生错误: {ex.Message}");
                 }
-                if (isFloatConversionSuccessful == true)
-                {
-                    try
-                    {
-                        if (check_ARM.IsChecked == false)
-                        {
-                            serialport2.Write(MCU, 0, 32);
-                        }
-                        else
-                        {
-                            serialport2.Write(MCU, 2, 24);
-                        }
-                        isFloatConversionSuccessful = false;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
-                        isFloatConversionSuccessful = false;
-                    }
-                }
+              
             }
             else
             {
@@ -871,28 +1132,49 @@ namespace gangway_controller
             if (serialport2.IsOpen)
             {
                 string inputText = dabi.Text;
-                MCU[1] = 0x02;
-                MCU[4] = 0x04;
-                MCU[5] = 0x18;
-                MCU[6] = 0x00;
-                MCU[25] = 0xFE;
+                ARMinit();
                 try
                 {
                     // 尝试将字符串转换为浮点数
                     if (float.TryParse(inputText, out float floatValue))
                     {
-                        // 将浮点数转换为字节数组（IEEE 754格式）
-                        byte[] floatBytes = BitConverter.GetBytes(floatValue);
+                        if (floatValue <= 180 && floatValue >= -180)
+                        {
+                            // 将浮点数转换为字节数组（IEEE 754格式）
+                            byte[] floatBytes = BitConverter.GetBytes(floatValue);
 
-                        // 将字节数组的内容复制到MCU数组，从索引6开始
-                        Array.Copy(floatBytes, 0, MCU, 11, floatBytes.Length);
-                        MCU[24] = CalculateSumChecksum(MCU, 2, 23);
-                        isFloatConversionSuccessful = true;
+                            // 将字节数组的内容复制到MCU数组，从索引6开始
+                            Array.Copy(floatBytes, 0, MCU, 11, floatBytes.Length);
+                            MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                            try
+                            {
+                                if (check_ARM.IsChecked == false)
+                                {
+                                    serialport2.Write(MCU, 0, 32);
+                                }
+                                else
+                                {
+                                    serialport2.Write(MCU, 2, 24);
+                                }
 
+
+
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("超出范围！");
+                            return;
+                        }
                     }
                     else
                     {
-                        isFloatConversionSuccessful = false;
+                       
                         MessageBox.Show("请输入有效的浮点数。");
                     }
 
@@ -900,31 +1182,10 @@ namespace gangway_controller
                 }
                 catch (Exception ex)
                 {
-                    isFloatConversionSuccessful = false;
+                   
                     MessageBox.Show($"转换发生错误: {ex.Message}");
                 }
-                if (isFloatConversionSuccessful == true)
-                {
-                    try
-                    {
-                        if (check_ARM.IsChecked == false)
-                        {
-                            serialport2.Write(MCU, 0, 32);
-                        }
-                        else
-                        {
-                            serialport2.Write(MCU, 2, 24);
-                        }
-                        MessageBox.Show("发送成功");
-
-                        isFloatConversionSuccessful = false;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
-                        isFloatConversionSuccessful = false;
-                    }
-                }
+          
             }
             else
             {
@@ -938,28 +1199,47 @@ namespace gangway_controller
             if (serialport2.IsOpen)
             {
                 string inputText = xiaobi.Text;
-                MCU[1] = 0x02;
-                MCU[4] = 0x04;
-                MCU[5] = 0x18;
-                MCU[6] = 0x00;
-                MCU[25] = 0xFE;
+                ARMinit();
                 try
                 {
                     // 尝试将字符串转换为浮点数
                     if (float.TryParse(inputText, out float floatValue))
                     {
-                        // 将浮点数转换为字节数组（IEEE 754格式）
-                        byte[] floatBytes = BitConverter.GetBytes(floatValue);
+                        if (floatValue <= 180 && floatValue >= -180)
+                        {
+                            // 将浮点数转换为字节数组（IEEE 754格式）
+                            byte[] floatBytes = BitConverter.GetBytes(floatValue);
 
-                        // 将字节数组的内容复制到MCU数组，从索引6开始
-                        Array.Copy(floatBytes, 0, MCU, 15, floatBytes.Length);
-                        MCU[24] = CalculateSumChecksum(MCU, 2, 23);
-                        isFloatConversionSuccessful = true;
+                            // 将字节数组的内容复制到MCU数组，从索引6开始
+                            Array.Copy(floatBytes, 0, MCU, 15, floatBytes.Length);
+                            MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                            try
+                            {
+                                if (check_ARM.IsChecked == false)
+                                {
+                                    serialport2.Write(MCU, 0, 32);
+                                }
+                                else
+                                {
+                                    serialport2.Write(MCU, 2, 24);
+                                }
 
-                    }
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+
+                            }
+                        }
+                         else
+                        {
+                            MessageBox.Show("超出范围！");
+                            return;
+                        }
+                     }
                     else
                     {
-                        isFloatConversionSuccessful = false;
+                      
                         MessageBox.Show("请输入有效的浮点数。");
                     }
 
@@ -967,29 +1247,10 @@ namespace gangway_controller
                 }
                 catch (Exception ex)
                 {
-                    isFloatConversionSuccessful = false;
+                  
                     MessageBox.Show($"转换发生错误: {ex.Message}");
                 }
-                if (isFloatConversionSuccessful == true)
-                {
-                    try
-                    {
-                        if (check_ARM.IsChecked == false)
-                        {
-                            serialport2.Write(MCU, 0, 32);
-                        }
-                        else
-                        {
-                            serialport2.Write(MCU, 2, 24);
-                        }
-                        isFloatConversionSuccessful = false;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
-                        isFloatConversionSuccessful = false;
-                    }
-                }
+              
             }
             else
             {
@@ -1003,28 +1264,44 @@ namespace gangway_controller
             if (serialport2.IsOpen)
             {
                 string inputText = wanbu.Text;
-                MCU[1] = 0x02;
-                MCU[4] = 0x04;
-                MCU[5] = 0x18;
-                MCU[6] = 0x00;
-                MCU[25] = 0xFE;
+                ARMinit();
                 try
                 {
                     // 尝试将字符串转换为浮点数
                     if (float.TryParse(inputText, out float floatValue))
                     {
-                        // 将浮点数转换为字节数组（IEEE 754格式）
-                        byte[] floatBytes = BitConverter.GetBytes(floatValue);
+                        if (floatValue <= 180 && floatValue >= -180)
+                        {
+                            // 将浮点数转换为字节数组（IEEE 754格式）
+                            byte[] floatBytes = BitConverter.GetBytes(floatValue);
 
-                        // 将字节数组的内容复制到MCU数组，从索引6开始
-                        Array.Copy(floatBytes, 0, MCU, 19, floatBytes.Length);
-                        MCU[24] = CalculateSumChecksum(MCU, 2, 23);
-                        isFloatConversionSuccessful = true;
-
+                            // 将字节数组的内容复制到MCU数组，从索引6开始
+                            Array.Copy(floatBytes, 0, MCU, 19, floatBytes.Length);
+                            MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                            try
+                            {
+                                if (check_ARM.IsChecked == false)
+                                {
+                                    serialport2.Write(MCU, 0, 32);
+                                }
+                                else
+                                {
+                                    serialport2.Write(MCU, 2, 24);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("超出范围！");
+                            return;
+                        }
                     }
                     else
                     {
-                        isFloatConversionSuccessful = false;
                         MessageBox.Show("请输入有效的浮点数。");
                     }
 
@@ -1032,28 +1309,7 @@ namespace gangway_controller
                 }
                 catch (Exception ex)
                 {
-                    isFloatConversionSuccessful = false;
                     MessageBox.Show($"转换发生错误: {ex.Message}");
-                }
-                if (isFloatConversionSuccessful == true)
-                {
-                    try
-                    {
-                        if (check_ARM.IsChecked == false)
-                        {
-                            serialport2.Write(MCU, 0, 32);
-                        }
-                        else
-                        {
-                            serialport2.Write(MCU, 2, 24);
-                        }
-                        isFloatConversionSuccessful = false;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
-                        isFloatConversionSuccessful = false;
-                    }
                 }
             }
             else
@@ -1067,14 +1323,9 @@ namespace gangway_controller
             //板子判断
             if (serialport2.IsOpen)
             {
-                MCU[1] = 0x02;
-                MCU[4] = 0x04;
-                MCU[5] = 0x18;
-                MCU[6] = 0x00;
+                ARMinit();
                 MCU[23] = 0x0A;
                 MCU[24] = CalculateSumChecksum(MCU, 2, 23);
-                MCU[25] = 0xFE;
-
                 try
                 {
                     serialport2.Write(MCU, 0, 32);
@@ -1094,13 +1345,9 @@ namespace gangway_controller
         {
             if (serialport2.IsOpen)
             {
-                MCU[1] = 0x02;
-                MCU[4] = 0x04;
-                MCU[5] = 0x18;
-                MCU[6] = 0x00;
+                ARMinit();
                 MCU[23] = 0x0F;
                 MCU[24] = CalculateSumChecksum(MCU, 2, 23);
-                MCU[25] = 0xFE;
                 try
                 {
                     if (check_ARM.IsChecked == false)
@@ -1122,10 +1369,498 @@ namespace gangway_controller
                 MessageBox.Show("请打开串口");
             }
         }
+        #endregion
+        #region 阶梯增减
+        private void IncrementButton_Click_jian(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIshouder.Text == "")
+            {
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;
+            //防止shouder.Text为空
+            if (shouder.Text == "") { shouder.Text = "0"; }
+            // if (float.TryParse(shouder.Text, out float floatValue))
+            // 尝试将DIshouder.Text和shouder.Text转换为数  
+            if (float.TryParse(DIshouder.Text, out number1) && float.TryParse(shouder.Text, out number2))
+            {
+                // 计算两个数的和  
+                float sum = +number1 + number2;
+                if (sum >= -180 && sum <= 180)
+                {   // 将和转换为字符串并更新到shouder.Text中（或者您可以选择更新到DIshouder.Text或其他文本框）  
+                    shouder.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+                    // 将字节数组的内容复制到MCU数组，从索引6开始
+                    Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+            }
+            else
+            {
+                // 如果无法转换，可以显示一个错误消息或执行其他错误处理  
+                MessageBox.Show("转换出错。");
+                return;
+            }
+
+
+        }
+
+        private void DecrementButton_Click_jian(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIshouder.Text == "")
+            { 
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;
+            //防止shouder.Text为空
+            if (shouder.Text == "") { shouder.Text = "0"; }
+            // if (float.TryParse(shouder.Text, out float floatValue))
+                // 尝试将DIshouder.Text和shouder.Text转换为数  
+            if (float.TryParse(DIshouder.Text, out number1) && float.TryParse(shouder.Text, out number2))
+            {
+            // 计算两个数的和  
+                float sum = -number1 + number2;
+                if ( sum >= -180 && sum <= 180 )
+                {   // 将和转换为字符串并更新到shouder.Text中（或者您可以选择更新到DIshouder.Text或其他文本框）  
+                    shouder.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+                    // 将字节数组的内容复制到MCU数组，从索引6开始
+                    Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+             }
+            else
+            {
+                // 如果无法转换，可以显示一个错误消息或执行其他错误处理  
+                MessageBox.Show("转换出错。");
+                return;
+            }
+      
+
+        }
+
+        private void IncrementButton_Click_big(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIdabi.Text == "")
+            {
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;  
+            if (dabi.Text == "") { dabi.Text = "0"; }  
+            if (float.TryParse(DIdabi.Text, out number1) && float.TryParse(dabi.Text, out number2))
+            {
+                // 计算两个数的和  
+                float sum = number1 + number2;
+                if (sum >= -180 && sum <= 180)
+                {   
+                    dabi.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+                   
+                    Array.Copy(floatBytes, 0, MCU, 11, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("转换出错。");
+                return;
+            }
+        }
+
+        private void DecrementButton_Click_big(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIdabi.Text == "")
+            {
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;
+            if (dabi.Text == "") { dabi.Text = "0"; }
+            if (float.TryParse(DIdabi.Text, out number1) && float.TryParse(dabi.Text, out number2))
+            {
+                // 计算两个数的和  
+                float sum = - number1 + number2;
+                if (sum >= -180 && sum <= 180)
+                {
+                    dabi.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+
+                    Array.Copy(floatBytes, 0, MCU, 11, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("转换出错。");
+                return;
+            }
+        }
+
+        private void IncrementButton_Click_small(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIxiaobi.Text == "")
+            {
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;
+            if (xiaobi.Text == "") { xiaobi.Text = "0"; }
+            if (float.TryParse(DIxiaobi.Text, out number1) && float.TryParse(xiaobi.Text, out number2))
+            {
+                // 计算两个数的和  
+                float sum = number1 + number2;
+                if (sum >= -180 && sum <= 180)
+                {
+                    xiaobi.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+
+                    Array.Copy(floatBytes, 0, MCU, 15, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("转换出错。");
+                return;
+            }
+        }
+
+        private void DecrementButton_Click_samll(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIxiaobi.Text == "")
+            {
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;
+            if (xiaobi.Text == "") { xiaobi.Text = "0"; }
+            if (float.TryParse(DIxiaobi.Text, out number1) && float.TryParse(xiaobi.Text, out number2))
+            {
+                // 计算两个数的和  
+                float sum = - number1 + number2;
+                if (sum >= -180 && sum <= 180)
+                {
+                    xiaobi.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+
+                    Array.Copy(floatBytes, 0, MCU, 15, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("转换出错。");
+                return;
+            }
+        }
+
+        private void IncrementButton_Click_wan(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIwanbu.Text == "")
+            {
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;
+            if (wanbu.Text == "") { wanbu.Text = "0"; }
+            if (float.TryParse(DIwanbu.Text, out number1) && float.TryParse(wanbu.Text, out number2))
+            {
+                // 计算两个数的和  
+                float sum = number1 + number2;
+                if (sum >= -180 && sum <= 180)
+                {
+                    wanbu.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+
+                    Array.Copy(floatBytes, 0, MCU, 19, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("转换出错。");
+                return;
+            }
+        }
+
+        private void DecrementButton_Click_wan(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
+            if (DIwanbu.Text == "")
+            {
+                MessageBox.Show("请输入");
+                return;
+            }
+            float number1;
+            float number2;
+            if (wanbu.Text == "") { wanbu.Text = "0"; }
+            if (float.TryParse(DIwanbu.Text, out number1) && float.TryParse(wanbu.Text, out number2))
+            {
+                // 计算两个数的和  
+                float sum = - number1 + number2;
+                if (sum >= -180 && sum <= 180)
+                {
+                    wanbu.Text = sum.ToString();
+                    ARMinit();
+                    // 将浮点数转换为字节数组（IEEE 754格式）
+                    byte[] floatBytes = BitConverter.GetBytes(sum);
+
+                    Array.Copy(floatBytes, 0, MCU, 19, floatBytes.Length);
+                    MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                    try
+                    {
+                        if (check_ARM.IsChecked == false)
+                        {
+                            serialport2.Write(MCU, 0, 32);
+                        }
+                        else
+                        {
+                            serialport2.Write(MCU, 2, 24);
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                        return;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("超出范围！");
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("转换出错。");
+                return;
+            }
+        }
+
+
+
 
         #endregion
 
-   
+        #endregion
 
 
     }
