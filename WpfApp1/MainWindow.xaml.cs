@@ -326,9 +326,9 @@ namespace gangway_controller
             ReceiveTextBox.Clear();
         }
 
-     
 
-       
+
+
 
 
 
@@ -336,8 +336,50 @@ namespace gangway_controller
 
         #endregion
         #region 主推
-
+        public void Motorinit()
+        {
+            MCU[1] = 0x01;
+            MCU[4] = 0x02;
+            MCU[8] = 0x24;
+        }
         private int _currentValue0 = 0; // 假设当前值为整数 
+        private void StopMotor(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("串口未打卡!");
+                return;
+            }
+            Motorinit();
+            MCU[5] = 0x0A;
+            MCU[6] = 0x5A;
+            MCU[7] = 0x5A;
+            try
+            {
+                Stopmotor.IsEnabled = false;
+                if (check_ARM.IsChecked == false)
+                {
+                    /*await Task.Run(() => */
+                    serialport2.Write(MCU, 0, 9)/*)*/;
+
+                }
+                else
+                {
+                    /*await Task.Run(() => */
+                    serialport2.Write(MCU, 2, 7)/*)*/;
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+            }
+            finally
+            {
+                Stopmotor.IsEnabled = true;
+            }
+
+        }
         private void Send_Click_zhutui(object sender, RoutedEventArgs e)
         {
             if (serialport2.IsOpen)
@@ -392,9 +434,7 @@ namespace gangway_controller
         {
             if (serialport2.IsOpen)
             {
-                MCU[1] = 0x01;
-                MCU[4] = 0x02;
-                MCU[8] = 0x24;
+                Motorinit();
                 MCU[5] = 0x0A;
                 if (MCU[6] == 0) { MCU[6] = 0x5A; }
                 if (MCU[7] == 0) { MCU[7] = 0x5A; }
@@ -426,9 +466,7 @@ namespace gangway_controller
             {
                 if (_currentValue0 > 0) // 防止减到负数（如果需要）  
                 {
-                    MCU[1] = 0x01;
-                    MCU[4] = 0x02;
-                    MCU[8] = 0x24;
+                    Motorinit();
                     if (MCU[6] == 0) { MCU[6] = 0x5A; }
                     if (MCU[7] == 0) { MCU[7] = 0x5A; }
                     _currentValue0--;
@@ -486,9 +524,7 @@ namespace gangway_controller
             {
                 if (_currentValue0 < 3) // 防止减到负数（如果需要）  
                 {
-                    MCU[1] = 0x01;
-                    MCU[4] = 0x02;
-                    MCU[8] = 0x24;
+                    Motorinit();
                     if (MCU[6] == 0) { MCU[6] = 0x5A; }
                     if (MCU[7] == 0) { MCU[7] = 0x5A; }
                     _currentValue0++; // 假设没有上限（你可以根据需求设置）
@@ -537,15 +573,13 @@ namespace gangway_controller
             }
         }
 
-     
+
 
 
         #endregion
         #region 舵
-    
 
-   
-
+       
         private void shuipingSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (!isInitialized) return; // 如果未初始化完毕，不执行事件处理
@@ -563,15 +597,17 @@ namespace gangway_controller
         }
         private async void Thumb_DragCompleted_shuiping(object sender, DragCompletedEventArgs e)
         {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("请打开串口");
+                return;
+            }
             if (shuiping_slider.Value >= 60 && shuiping_slider.Value <= 120)
             {
                 // horizontal.Text = ((int)shuiping_slider.Value).ToString();
-                if (serialport2.IsOpen)
-                {
-                    MCU[1] = 0x01;
-                    MCU[4] = 0x02;
-                    MCU[8] = 0x24;
-                    if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
+
+                Motorinit();
+                if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
                     if (MCU[7] == 0x00) { MCU[7] = 0x5A; }
                     MCU[6] = (byte)shuiping_slider.Value;
                     try
@@ -589,11 +625,7 @@ namespace gangway_controller
                     {
                         MessageBox.Show($"发送数据时发生错误: {ex.Message}");
                     }
-                }
-                else
-                {
-                    MessageBox.Show("请打开串口");
-                }
+               
             }
         }
         private /*async*/ void Send_Click_shuipingDuo(object sender, RoutedEventArgs e)
@@ -611,18 +643,14 @@ namespace gangway_controller
                         //shuiping_slider.InvalidateVisual();
                         if (serialport2.IsOpen)
                         {
-
-
-                            MCU[1] = 0x01;
-                            MCU[4] = 0x02;
-                            MCU[8] = 0x24;
+                            Motorinit();
                             if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
                             if (MCU[7] == 0x00) { MCU[7] = 0x5A; }
                             MCU[6] = (byte)value;
 
                             try
                             {
-                                Send3.IsEnabled = false;
+                                Send1.IsEnabled = false;
                                 if (check_ARM.IsChecked == false)
                                 {
                                     /*await Task.Run(() => */serialport2.Write(MCU, 0, 9)/*)*/;
@@ -640,7 +668,7 @@ namespace gangway_controller
                             }
                             finally
                             {
-                                Send3.IsEnabled = true;
+                                Send1.IsEnabled = true;
                             }
                         }
                         else
@@ -689,9 +717,7 @@ namespace gangway_controller
             {
                 if (serialport2.IsOpen)
                 {
-                    MCU[1] = 0x01;
-                    MCU[4] = 0x02;
-                    MCU[8] = 0x24;
+                    Motorinit();
                     if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
                     if (MCU[6] == 0x00) { MCU[6] = 0x5A; }
                     MCU[7] = (byte)chuizhi_slider.Value;
@@ -732,11 +758,7 @@ namespace gangway_controller
                         //shuiping_slider.InvalidateVisual();
                         if (serialport2.IsOpen)
                         {
-
-
-                            MCU[1] = 0x01;
-                            MCU[4] = 0x02;
-                            MCU[8] = 0x24;
+                            Motorinit();
                             if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
                             if (MCU[6] == 0x00) { MCU[6] = 0x5A; }
                             MCU[7] = (byte)value;
@@ -784,14 +806,11 @@ namespace gangway_controller
 
         }
 
-
         private async void stop_Click_shuipingDuo(object sender, RoutedEventArgs e)
         {
             if (serialport2.IsOpen)
             {
-                MCU[1] = 0x01;
-                MCU[4] = 0x02;
-                MCU[8] = 0x24;
+                Motorinit();
                 if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
                 MCU[6] = 0x5A;
                 if (MCU[7] == 0x00) { MCU[7] = 0x5A; }
@@ -826,9 +845,7 @@ namespace gangway_controller
         {
             if (serialport2.IsOpen)
             {
-                MCU[1] = 0x01;
-                MCU[4] = 0x02;
-                MCU[8] = 0x24;
+                Motorinit();
                 if (MCU[5] == 0x00) { MCU[5] = 0x0A; }
                 if (MCU[6] == 0x00) { MCU[6] = 0x5A; }
                 MCU[7] = 0x5A;
@@ -861,13 +878,208 @@ namespace gangway_controller
 
         #endregion
         #region 侧推
+    
         private void Send_Click_cetui(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("未开发");
+           
+            if (serialport2.IsOpen)
+            {
+                if (check_left.IsChecked == true && check_right.IsChecked == true)
+                {
+                    if (lateral.Text == "")
+                    {
+                        MessageBox.Show("请输入！");
+                        return;
+                    }
+                    string inputText = lateral.Text;
+                    ARMinit();
+                    try
+                    {
+                        // 尝试将字符串转换为浮点数
+                        if (float.TryParse(inputText, out float floatValue))
+                        {
+                            if (floatValue <=500 && floatValue >= 0)
+                            { // 将浮点数转换为字节数组（IEEE 754格式）
+                                byte[] floatBytes = BitConverter.GetBytes(floatValue+1500);
+
+                                // 将字节数组的内容复制到MCU数组，从索引6开始
+                                Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
+                                MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                                try
+                                {
+                                    Send3.IsEnabled = false;
+                                    if (check_ARM.IsChecked == false)
+                                    {
+                                        serialport2.Write(MCU, 0, 32);
+                                    }
+                                    else
+                                    {
+                                        serialport2.Write(MCU, 2, 24);
+                                    }
+
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+
+                                }
+                                finally
+                                {
+                                    Send3.IsEnabled = true;
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show("超出范围！");
+                                return;
+
+                            }
+                        }
+                        else
+                        {
+
+                            MessageBox.Show("请输入!");
+                        }
+
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        MessageBox.Show($"转换发生错误: {ex.Message}");
+                    }
+                }
+                else {
+                    MessageBox.Show("请勾选左右侧推");
+                }
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
         }
         private void stop_Click_cetui(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("未开发");
+            if (serialport2.IsOpen)
+            {
+                if (check_left.IsChecked == true && check_right.IsChecked == true)
+                {
+                    string inputText = "1500";
+                    ARMinit();
+                    try
+                    {
+                        // 尝试将字符串转换为浮点数
+                        if (float.TryParse(inputText, out float floatValue))
+                        {
+                              // 将浮点数转换为字节数组（IEEE 754格式）
+                                byte[] floatBytes = BitConverter.GetBytes(floatValue);
+
+                                // 将字节数组的内容复制到MCU数组，从索引6开始
+                                Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
+                                MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                                try
+                                {
+                                    if (check_ARM.IsChecked == false)
+                                    {
+                                        serialport2.Write(MCU, 0, 32);
+                                    }
+                                    else
+                                    {
+                                        serialport2.Write(MCU, 2, 24);
+                                    }
+
+                                }
+                                catch (Exception ex)
+                                {
+                                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+
+                                }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                        MessageBox.Show($"转换发生错误: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("请勾选左右侧推");
+                }
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+        private void cetuiSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (!isInitialized) return; // 如果未初始化完毕，不执行事件处理
+            if (serialport2.IsOpen)
+            {
+                if (cetui_slider.Value >= 0 && cetui_slider.Value <= 500)
+                {
+                    lateral.Text = ((int)cetui_slider.Value).ToString();
+                }
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+        }
+        private async void Thumb_DragCompleted_cetui(object sender, DragCompletedEventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+                if (check_left.IsChecked == true && check_right.IsChecked == true)
+                {
+                    if (cetui_slider.Value <= 500 && cetui_slider.Value >= 0)
+                    { // 将浮点数转换为字节数组（IEEE 754格式）
+                        byte[] floatBytes = BitConverter.GetBytes((float)cetui_slider.Value+1500);
+                        // 将字节数组的内容复制到MCU数组，从索引6开始
+                        Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
+                        MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+                        ARMinit();
+                        try
+                        {
+                            if (check_ARM.IsChecked == false)
+                            {
+                                await Task.Run(() => serialport2.Write(MCU, 0, 32));
+                            }
+                            else
+                            {
+                                await Task.Run(() => serialport2.Write(MCU, 2, 24));
+                            } 
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("超出范围！");
+                        return;
+
+                    }
+
+                }
+                else
+                {
+                    lateral.Text = "0";
+                    cetui_slider.Value=0;
+                    MessageBox.Show("请勾选左右侧推");
+                }
+            }
+            else
+            {
+                MessageBox.Show("请打开串口");
+            }
+
+               
+
+            
         }
 
 
@@ -1061,11 +1273,13 @@ namespace gangway_controller
         }
         #endregion
         #region 输入发送
+        public static  string originalShoulderText = "";
         private void Send_Click_jian(object sender, RoutedEventArgs e)
         {
             //板子判断
             if (serialport2.IsOpen)
             {
+
                 string inputText = shouder.Text;
                 ARMinit();
                 try
@@ -1073,9 +1287,12 @@ namespace gangway_controller
                     // 尝试将字符串转换为浮点数
                     if (float.TryParse(inputText, out float floatValue))
                     {
-                        if(floatValue <= 180 && floatValue >= -180)
-                       { // 将浮点数转换为字节数组（IEEE 754格式）
-                            byte[] floatBytes = BitConverter.GetBytes(floatValue);
+                       
+                        if (floatValue <= 180 && floatValue >= -180)
+                       {
+                           
+                              // 将浮点数转换为字节数组（IEEE 754格式）
+                             byte[] floatBytes = BitConverter.GetBytes(floatValue);
 
                             // 将字节数组的内容复制到MCU数组，从索引6开始
                             Array.Copy(floatBytes, 0, MCU, 7, floatBytes.Length);
@@ -1090,7 +1307,8 @@ namespace gangway_controller
                                 {
                                     serialport2.Write(MCU, 2, 24);
                                 }
-                               
+                                 originalShoulderText = shouder.Text;
+
                             }
                             catch (Exception ex)
                             {
@@ -1100,6 +1318,7 @@ namespace gangway_controller
                         }
                         else
                         {
+                            shouder.Text = originalShoulderText;
                             MessageBox.Show("超出范围！");
                             return;
 
@@ -1858,10 +2077,13 @@ namespace gangway_controller
 
 
 
-        #endregion
+
+
 
         #endregion
 
+        #endregion
 
+ 
     }
 }
