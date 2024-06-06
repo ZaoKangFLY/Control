@@ -13,3 +13,5 @@ D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\UVMS.csproj.CoreCompile
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\WpfApp1.exe
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\WpfApp1.pdb
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\WpfApp1.pdb
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\DynamicDataDisplay.dll
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\UVMS.csproj.CopyComplete

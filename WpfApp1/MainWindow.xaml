@@ -5,23 +5,30 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:gangway_controller"
         mc:Ignorable="d"
+        xmlns:d3="http://research.microsoft.com/DynamicDataDisplay/1.0"
         Title="UVMS" Height="921" Width="1387"  FontFamily="FangSong" FontSize="20">
 
 
     <Grid Margin="0,0,10,0">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="524*"/>
-            <ColumnDefinition Width="863*"/>
-
+            <ColumnDefinition Width="490*"/>
+            <ColumnDefinition Width="887*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="124*"/>
             <RowDefinition Height="161*"/>
             <RowDefinition Height="168*"/>
         </Grid.RowDefinitions>
-        <Image Margin="741,16,2,129" Grid.Column="1" Grid.Row="0" >
+        <Image Margin="771,16,17,147" Grid.Column="1" Grid.Row="0" >
             <Image.Source>1.jpg</Image.Source>
         </Image>
+        <Label Content="不经PC104发送命令" FontFamily="FangSong" Width="180" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,201,0,0" Height="33"/>
+        <CheckBox x:Name="check_ARM" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="219,201,0,0" IsChecked="True">
+            <CheckBox.LayoutTransform>
+                <ScaleTransform ScaleX="2" ScaleY="2"></ScaleTransform>
+            </CheckBox.LayoutTransform>
+        </CheckBox>
+
         <GroupBox Header="串口参数初始化"  HorizontalAlignment="Center"  VerticalAlignment="Top" Height="186" Width="460"  FontFamily="FangSong" Margin="0,10,0,0" >
             <Canvas   Margin="0,0,0,7"  >
                 <Label    Content="端口号" HorizontalAlignment="Left"   FontFamily="FangSong" VerticalAlignment="Center" Canvas.Top="20" Canvas.Left="18"/>
@@ -46,6 +53,8 @@
                 </Button>
                 <Ellipse x:Name="status" Fill="Red" Height="18" Canvas.Left="275" Stroke="Black" Canvas.Top="122" Width="18"/>
             </Canvas>
+
+
         </GroupBox>
 
         <GroupBox Header="动力控制" HorizontalAlignment="Center" VerticalAlignment="Center" Height="301" Width="458"  FontFamily="FangSong" RenderTransformOrigin="0.5,0.5" Grid.Row="1">
@@ -218,46 +227,77 @@
         </GroupBox>
 
 
-        <!-- 接收数据显示的  -->
-        <TextBox x:Name="send_content" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Top" Width="724" Height="62"  Grid.Column="1" Margin="10,245,0,0" Grid.Row="1"/>
-        <Button x:Name="Send" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Send_Click_all" Width="88" Grid.Column="1" Margin="746,245,0,0" Height="28" RenderTransformOrigin="-0.662,1.134" Grid.Row="1" />
-        <TextBox x:Name="ReceiveTextBox" 
-            HorizontalAlignment="Left" 
-            VerticalAlignment="Top" 
-            Width="722" 
-            Height="453" 
-            Margin="12,24,0,0" 
-            TextWrapping="Wrap" 
-            VerticalScrollBarVisibility="Auto" 
-            AcceptsReturn="True" 
-            IsReadOnly="True" 
-            Foreground="Black" 
-            Background="White" 
-            Grid.Column="1" Grid.RowSpan="2"  />
-        <CheckBox x:Name="check_ASCII" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="800,157,0,0" IsChecked="False" Checked="check_ASCII_Checked" Grid.Row="1">
-            <CheckBox.LayoutTransform>
-                <ScaleTransform ScaleX="2" ScaleY="2"  ></ScaleTransform>
-            </CheckBox.LayoutTransform>
-        </CheckBox>
-        <CheckBox x:Name="check_HEX" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="800,121,0,0" Checked="check_HEX_Checked" Grid.Row="1">
-            <CheckBox.LayoutTransform>
-                <ScaleTransform ScaleX="2" ScaleY="2"  ></ScaleTransform>
-            </CheckBox.LayoutTransform>
-        </CheckBox>
-        <Label Content="ASCII" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="738,153,0,0" Height="33" Width="62" Grid.Row="1"/>
-        <Label Content="HEX" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="1" Margin="740,121,0,0" Height="32" Width="40" RenderTransformOrigin="4.012,2.68" Grid.Row="1"/>
-        <Button x:Name="clc" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_content" Width="86" Margin="746,78,0,0" Height="27" Grid.Column="1" Grid.Row="1" Background="#FFCE5E5E" BorderBrush="#FFB75353" />
-        <Button x:Name="save" Content="保存" HorizontalAlignment="Left" VerticalAlignment="Top" Click="save_Click_content" Width="87" Margin="747,202,0,0" Height="27" Grid.Column="1" Grid.Row="1" />
-        <Button x:Name="clc_send" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_send" Width="88" Margin="746,280,0,0" Height="27" Grid.Column="1" Grid.Row="1" RenderTransformOrigin="1.166,0.66" />
-        <Label Content="不经PC104发送命令" FontFamily="FangSong" Width="180" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30,201,0,0" Height="33"/>
-        <CheckBox x:Name="check_ARM" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="219,201,0,0" IsChecked="True" >
-            <CheckBox.LayoutTransform>
-                <ScaleTransform ScaleX="2" ScaleY="2"  />
-            </CheckBox.LayoutTransform>
-        </CheckBox>
-        <!-- 接收数据显示的  -->
 
+        <GroupBox Header="数显窗" Grid.Column="1" Margin="10,0,10,10" Grid.RowSpan="3">
+            <Grid Height="843">
+                <Grid.ColumnDefinitions>
 
+                    <ColumnDefinition Width="786"/>
+                    <ColumnDefinition Width="59"/>
+
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="send_content" HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Width="723" Height="62" Margin="15,310,0,0"/>
+                <Button x:Name="Send" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Send_Click_all" Width="88" Margin="745,310,0,0" Height="28" RenderTransformOrigin="-0.662,1.134" Grid.ColumnSpan="2"/>
+                <TextBox x:Name="ReceiveTextBox"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Width="723"
+                    Height="303"
+                    Margin="15,2,0,0"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto"
+                    AcceptsReturn="True"
+                    IsReadOnly="True"
+                    Foreground="Black"
+                    Background="White"
+                    />
+
+                <CheckBox x:Name="check_zitai" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,109,0,0" Checked="check_zitai_Checked"  Grid.Column="1">
+                    <CheckBox.LayoutTransform>
+                        <ScaleTransform ScaleX="2" ScaleY="2"></ScaleTransform>
+                    </CheckBox.LayoutTransform>
+                </CheckBox>
+                <CheckBox x:Name="check_ASCII" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="11,220,0,0" IsChecked="False" Checked="check_ASCII_Checked" Grid.Column="1">
+                    <CheckBox.LayoutTransform>
+                        <ScaleTransform ScaleX="2" ScaleY="2"></ScaleTransform>
+                    </CheckBox.LayoutTransform>
+                </CheckBox>
+                <CheckBox x:Name="check_HEX" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="11,188,0,0" Checked="check_HEX_Checked" Grid.Column="1">
+                    <CheckBox.LayoutTransform>
+                        <ScaleTransform ScaleX="2" ScaleY="2"></ScaleTransform>
+                    </CheckBox.LayoutTransform>
+                </CheckBox>
+                <Label Content="姿态显示" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="750,77,0,0" Height="32" Width="95" Grid.ColumnSpan="2"/>
+                <Label Content="ASCII" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="739,220,0,0" Height="32" Width="62" Grid.ColumnSpan="2"/>
+                <Label Content="HEX" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="739,192,0,0" Height="32" Width="40" RenderTransformOrigin="4.012,2.68"/>
+                <Button x:Name="clc" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_content" Width="86" Margin="743,154,0,0" Height="28" Background="#FFCE5E5E" BorderBrush="#FFB75353" Grid.ColumnSpan="2"/>
+                <Button x:Name="save" Content="保存" HorizontalAlignment="Left" VerticalAlignment="Top" Click="save_Click_content" Width="87" Margin="743,266,0,0" Height="27" Grid.ColumnSpan="2"/>
+                <Button x:Name="clc_send" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_send" Width="88" Margin="745,343,0,0" Height="27" RenderTransformOrigin="1.166,0.66" Grid.ColumnSpan="2"/>
+                <!-- 接收数据曲线的  -->
+            </Grid>
+        </GroupBox>
+        <Grid Grid.Column="1" Margin="28,173,40,43" Grid.RowSpan="2" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="滚屏or不滚屏"  Click="Button_Click"/>
+            </StackPanel>
+            <d3:ChartPlotter x:Name="plotter" Margin="0,10,102,10" Grid.Row="1">
+                <d3:ChartPlotter.VerticalAxis>
+                    <d3:VerticalIntegerAxis />
+                </d3:ChartPlotter.VerticalAxis>
+
+                <d3:ChartPlotter.HorizontalAxis>
+                    <d3:HorizontalIntegerAxis />
+                </d3:ChartPlotter.HorizontalAxis>
+
+                <d3:Header Content="数据"/>
+                <d3:VerticalAxisTitle Content="值"/>
+            </d3:ChartPlotter>
+        </Grid>
 
 
     </Grid>
