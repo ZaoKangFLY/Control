@@ -22,6 +22,10 @@ using System.Diagnostics;
 using System.Windows.Threading;
 using System.Collections;
 using System.Windows.Markup;
+using Microsoft.Research.DynamicDataDisplay.Charts;
+using Microsoft.Research.DynamicDataDisplay.Charts.Axes;
+using Microsoft.Win32;
+using System.Windows.Media.Animation;
 
 namespace gangway_controller
 {
@@ -31,17 +35,20 @@ namespace gangway_controller
 
     public partial class BMQ : Window
     {
-        int bmq_tmp = 0;
-        SerialPort serialport2 = new SerialPort();
-        public byte[] MCU = new byte[32];//8位无符号整数
-        public byte[] SEND = new byte[40];//8位无符号整数
-        private bool isInitialized = false; // 防止初始化就刷新
 
-        private ObservableDataSource<Point> dataSource = new ObservableDataSource<Point>();
-        private PerformanceCounter performanceCounter = new PerformanceCounter();
+        int bmq_tmp = 0;
+        public SerialPort serialport2 = new SerialPort();
+        public byte[] MCU = new byte[32];//8位无符号整数
+        public byte[] SEND = new byte[100];//8位无符号整数
+        private bool isInitialized = false; // 防止初始化就刷新
+        private ObservableDataSource<Point> rollDataSource = new ObservableDataSource<Point>();
+        private ObservableDataSource<Point> pitchDataSource = new ObservableDataSource<Point>();
+        private ObservableDataSource<Point> yawDataSource = new ObservableDataSource<Point>();
+        //private PerformanceCounter performanceCounter = new PerformanceCounter();
         private DispatcherTimer dispatcherTimer = new DispatcherTimer();
+        private int group = 20; // 默认组距
         private int currentSecond = 0;
-        bool buttonbool = false;//标志是否滚屏  
+        bool buttonbool = false; 
         public BMQ()
         {
             InitializeComponent();
@@ -52,79 +59,204 @@ namespace gangway_controller
             check_HEX.IsChecked = true;
             // 初始化完成，设置标志为 true
             isInitialized = true;
-        
-
-
+    
         }
-        #region 实显
-        /*private void Window_Loaded(object sender, RoutedEventArgs e)
+
+        #region 通用
+        //校验和
+        public static byte CalculateSumChecksum(byte[] Cmd, int startIndex, int endIndex)
         {
-            plotter.AddLineGraph(dataSource, Colors.Red, 2, "百分比");
+            if (startIndex < 0 || endIndex >= Cmd.Length || startIndex > endIndex)
+            {
+                throw new ArgumentOutOfRangeException("起始索引或结束索引超出数组范围或不合法。");
+            }
+
+            int sum = 0;
+            for (int i = startIndex; i <= endIndex; i++)
+            {
+                sum += Cmd[i];
+            }
+
+            // 仅取低8位
+            return (byte)(sum & 0xFF);
+        }
+        //窗口关闭时关闭串口
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            if (serialport2.IsOpen)
+            {
+                serialport2.Close();
+            }
+        }
+        //新窗口
+        private void OpenNewWindow_Click(object sender, RoutedEventArgs e)
+        {
+            NewWindow newWindow = new NewWindow(serialport2);
+            double newX = this.Left + (this.Width - newWindow.Width) / 2;
+            double newY = this.Top + (this.Height - newWindow.Height) / 2;
+
+            // 设置新窗口的位置
+            newWindow.Left = newX;
+            newWindow.Top = newY;
+            newWindow.ShowDialog(); // 使用ShowDialog方法打开模态对话框
+        }
+        #endregion
+
+        #region 实显
+        public class CustomLabelProvider : LabelProviderBase<double>
+        {
+            private readonly string _unit;
+
+            public CustomLabelProvider(string unit)
+            {
+                _unit = unit;
+            }
+
+            public override UIElement[] CreateLabels(ITicksInfo<double> ticksInfo)
+            {
+                var ticks = ticksInfo.Ticks;
+                var result = new List<UIElement>();
+
+                foreach (var tick in ticks)
+                {
+                    var label = new TextBlock
+                    {
+                        Text = $"{tick:F2} {_unit}"
+                    };
+                    result.Add(label);
+                }
+
+                return result.ToArray();
+            }
+        }
+        private void Grasp_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog dlg = new SaveFileDialog(); //文件选择弹出框
+            dlg.Filter = "PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|GIF (*.gif)|*.gif";
+            dlg.FilterIndex = 1;
+            dlg.AddExtension = true;
+            if (dlg.ShowDialog().GetValueOrDefault(false))
+            {
+                string filePath = dlg.FileName;
+                plotter.SaveScreenshot(filePath);//filePath：取得保存的目录
+            }
+        }
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            // 清除所有曲线数据源
+            rollDataSource.Collection.Clear();
+            pitchDataSource.Collection.Clear();
+            yawDataSource.Collection.Clear();
+        }
+        private bool showRoll = true;
+        private bool showPitch = true;
+        private bool showYaw = true;
+
+        private void ALL_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            string selectedLine = ALLComboBox.SelectedItem as string;
+            if (selectedLine != null)
+            {
+                switch (selectedLine)
+                {
+                    case "All":
+                        showRoll = true;
+                        showPitch = true;
+                        showYaw = true;
+                        break;
+                    case "Roll":
+                        showRoll = true;
+                        showPitch = false;
+                        showYaw = false;
+                        break;
+                    case "Pitch":
+                        showRoll = false;
+                        showPitch = true;
+                        showYaw = false;
+                        break;
+                    case "Yaw":
+                        showRoll = false;
+                        showPitch = false;
+                        showYaw = true;
+                        break;
+                    default:
+                        showRoll = false;
+                        showPitch = false;
+                        showYaw = false;
+                        break;
+                }
+            }
+        }
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // 将Roll、Pitch和Yaw分别用不同颜色的线添加到图表中
+           
+             plotter.AddLineGraph(rollDataSource, Colors.Red, 2, "Roll"); 
+          
+             plotter.AddLineGraph(pitchDataSource, Colors.Blue, 2, "Pitch"); 
+         
+            plotter.AddLineGraph(yawDataSource, Colors.Green, 2, "Yaw");
+
+            ALLComboBox.Items.Add("All");
+            ALLComboBox.Items.Add("Roll");
+            ALLComboBox.Items.Add("Pitch");
+            ALLComboBox.Items.Add("Yaw");
+
+
+            // 设置图例可见
             plotter.LegendVisible = true;
+
+            // 自定义标签提供者以设置轴标签格式
+          
+
+            // 设置定时器间隔为1秒
             dispatcherTimer.Interval = TimeSpan.FromSeconds(1);
+
+            // 添加定时器Tick事件处理程序
             dispatcherTimer.Tick += timer_Tick;
-            dispatcherTimer.IsEnabled = true;
+            dispatcherTimer.Interval = TimeSpan.FromSeconds(0.1);
+            // 启用定时器
+            dispatcherTimer.Start();
+
+            // 自动调整视口以适应数据
             plotter.Viewport.FitToView();
+
+            Debug.WriteLine("Timer Started");
         }
 
-        int xaxis = 0;
-        int yaxis = 0;
-        int group = 20;//默认组距  
-
-        Queue q = new Queue();
         private void timer_Tick(object sender, EventArgs e)
         {
-            performanceCounter.CategoryName = "Processor";
-            performanceCounter.CounterName = "% Processor Time";
-            performanceCounter.InstanceName = "_Total";
-            double x = currentSecond;
-            double y = performanceCounter.NextValue();
-            Point point = new Point(x, y);
-            dataSource.AppendAsync(base.Dispatcher, point);
-            if (wendu)
-            {
-                if (q.Count < group)
-                {
-                    q.Enqueue((int)y);//入队  
-                    yaxis = 0;
-                    foreach (int c in q)
-                        if (c > yaxis)
-                            yaxis = c;
-                }
-                else
-                {
-                    q.Dequeue();//出队  
-                    q.Enqueue((int)y);//入队  
-                    yaxis = 0;
-                    foreach (int c in q)
-                        if (c > yaxis)
-                            yaxis = c;
-                }
-
-                if (currentSecond - group > 0)
-                    xaxis = currentSecond - group;
-                else
-                    xaxis = 0;
-
-                Debug.Write("{0}\n", yaxis.ToString());
-                plotter.Viewport.Visible = new System.Windows.Rect(xaxis, 0, group, yaxis);//主要注意这里一行  
-            }
+            // 更新时间
             currentSecond++;
+
+            // 如果解析成功，就将当前角度数据添加到数据源中
+            if (TryParseFrame())
+            {
+                // 调试信息
+                Debug.WriteLine($"Second: {currentSecond}, Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}");
+
+                if (buttonbool)
+                {
+                    // 如果滚屏模式启用，更新视口范围
+                    plotter.Viewport.Visible = new Rect(currentSecond - 5, -1, 10, 40);
+                }
+                else
+                {
+                    // 如果滚屏模式禁用，自动调整视口以适应数据
+                    plotter.Viewport.FitToView();
+                }
+            }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+  
+
+        private void Run_Click(object sender, RoutedEventArgs e)
         {
-            if (wendu)
-            {
-                wendu = false;
-            }
-            else
-            {
-                wendu = true;
-            }
-        }*/
+            buttonbool = !buttonbool;  
+        }
         #endregion
-        #region 串口
+
+        #region 串口初始化
         private void SerialInit()
         {
             ComboBox_Baud.Items.Add("9600");//19200、38400、57600
@@ -200,35 +332,237 @@ namespace gangway_controller
             }
         }
         #endregion
-        #region 通用
-        //校验和
-        public static byte CalculateSumChecksum(byte[] Cmd, int startIndex, int endIndex)
-        {
-            if (startIndex < 0 || endIndex >= Cmd.Length || startIndex > endIndex)
-            {
-                throw new ArgumentOutOfRangeException("起始索引或结束索引超出数组范围或不合法。");
-            }
 
-            int sum = 0;
-            for (int i = startIndex; i <= endIndex; i++)
-            {
-                sum += Cmd[i];
-            }
-
-            // 仅取低8位
-            return (byte)(sum & 0xFF);
-        }
-        //窗口关闭时关闭串口
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            if (serialport2.IsOpen)
-            {
-                serialport2.Close();
-            }
-        }
-        #endregion
         #region 回传数据
 
+        //姿态数据计算
+        private double CalculateAngle(int angle)
+        {
+            if (angle < 32767)
+            {
+                return angle * 0.01;
+            }
+            else
+            {
+                return (angle - 65536) * 0.01;
+            }
+        }
+        private double currentRoll;
+        private double currentPitch;
+        private double currentYaw;
+        private List<byte> buffer = new List<byte>(); // 缓冲区定义
+        /* public bool TryParseFrame()
+         {
+             while (buffer.Count >= 17) // 确保有足够的数据来处理
+             {
+                 // 查找帧头 FA AF F1
+                 bool frameFound = false;
+                 for (int i = 0; i <= buffer.Count - 17; i++)
+                 {
+                     if (buffer[i] == 0xFA && buffer[i + 1] == 0xAF && buffer[i + 2] == 0xF1)
+                     {
+                         frameFound = true;
+
+                         // 校验和验证
+                         byte expectedChecksum = buffer[i + 16];
+                         byte calculatedChecksum = CalculateSumChecksum(buffer.ToArray(), i, i + 15);
+                         if (expectedChecksum == calculatedChecksum)
+                         {
+                             // 提取角度数据
+                             int rollRaw = (buffer[i + 4] << 8) | buffer[i + 5];
+                             int pitchRaw = (buffer[i + 6] << 8) | buffer[i + 7];
+                             int yawRaw = (buffer[i + 8] << 8) | buffer[i + 9];
+
+                             currentRoll = CalculateAngle(rollRaw);
+                             currentPitch = CalculateAngle(pitchRaw);
+                             currentYaw = CalculateAngle(yawRaw);
+
+                             // 移除已处理的数据
+                             buffer.RemoveRange(0, i + 17);
+                             return true; // 成功解析了一帧数据
+                         }
+                         else
+                         {
+                             // 校验和不匹配，跳过该帧
+                             buffer.RemoveRange(0, i + 1);
+                             break;
+                         }
+                     }
+                 }
+
+                 if (!frameFound)
+                 {
+                     // 没有找到帧头，清除无效数据
+                     buffer.Clear();
+                 }
+             }
+             return false; // 未成功解析任何帧数据
+         }
+         */
+        // 接收数据的方法
+        int rollRaw ;
+        int pitchRaw ;
+        int yawRaw ;
+       
+     
+
+        
+        private bool TryParseFrame()
+        {
+            for (int i = 0; i <= buffer.Count - 17; i++)
+            {  
+                 if (buffer[i] == 0xAA && buffer[i + 2] == 0x0C)
+                    {
+                        if (buffer.Count < i + 16) continue;
+                        byte expectedChecksum = buffer[i + 15];
+                         int checksum =( CalculateSumChecksum(buffer.ToArray(), i + 2, i + 14) + 0xFA + 0xAF + 0xF1 ) & 0xFF;      
+                    if (expectedChecksum == (byte)checksum)
+                        {
+                             rollRaw = (buffer[i + 3] << 8) | buffer[i + 4];
+                             pitchRaw = (buffer[i + 5] << 8) | buffer[i + 6];
+                             yawRaw = (buffer[i + 7] << 8) | buffer[i + 8];
+                        }
+                    }
+                    if (buffer[i] == 0xFA && buffer[i + 1] == 0xAF && buffer[i + 2] == 0xF1)
+                    {
+                        if (buffer.Count < i + 17) continue;
+                        byte expectedChecksum = buffer[i + 16];
+                        byte checksum = CalculateSumChecksum(buffer.ToArray(), i, i + 15);
+                        if (expectedChecksum == checksum)
+                        {
+                             rollRaw = (buffer[i + 4] << 8) | buffer[i + 5];
+                             pitchRaw = (buffer[i + 6] << 8) | buffer[i + 7];
+                             yawRaw = (buffer[i + 8] << 8) | buffer[i + 9];
+                        }
+                    }
+                currentRoll = CalculateAngle(rollRaw);
+                currentPitch = CalculateAngle(pitchRaw);
+                currentYaw = CalculateAngle(yawRaw);
+
+                Point rollPoint = new Point(currentSecond, currentRoll);
+                Point pitchPoint = new Point(currentSecond, currentPitch);
+                Point yawPoint = new Point(currentSecond, currentYaw);
+
+                if (showRoll)
+                {
+                    rollDataSource.AppendAsync(base.Dispatcher, rollPoint);
+                }
+                if (showPitch)
+                {
+                    pitchDataSource.AppendAsync(base.Dispatcher, pitchPoint);
+                }
+                if (showYaw)
+                {
+                    yawDataSource.AppendAsync(base.Dispatcher, yawPoint);
+                }
+                buffer.RemoveRange(i, 17);
+                return true;
+            }
+            return false;
+        }
+       
+
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            try
+            {
+                while (serialport2.BytesToRead > 0)
+                {
+                    byte[] tempBuffer = new byte[serialport2.BytesToRead];
+                    int numBytesRead = serialport2.Read(tempBuffer, 0, tempBuffer.Length);
+
+                    // 将新接收的数据添加到缓冲区
+                    buffer.AddRange(tempBuffer);
+                   
+                                        
+                        // 解析帧数据并更新姿态数据
+                        bool frameParsed = TryParseFrame();
+
+                        this.Dispatcher.Invoke(() =>
+                    {
+                        // 如果选中了HEX显示选项
+                        if (check_HEX.IsChecked == true)
+                        {
+                            if (check_zitai.IsChecked == true)
+                            {
+                                if (frameParsed)
+                                {
+                                    // 仅显示姿态数据
+                                    ReceiveTextBox.AppendText($"Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}\n");
+                                    //{}: 大括号用于指示插入变量的位置。 currentRoll: 这是要插入的变量。假设currentRoll是一个浮点数变量。 :F2: 这是格式说明符。F表示浮点数格式，2表示保留两位小数。
+
+                                }
+                            }
+                            else
+                            {
+                                string hexData = BitConverter.ToString(tempBuffer).Replace("-", " ");
+                                ReceiveTextBox.AppendText(hexData + "\n");
+                            }
+
+                        }
+                        else if (check_ASCII.IsChecked == true)
+                        {
+                            string receivedData = Encoding.UTF8.GetString(tempBuffer, 0, numBytesRead);
+                            ReceiveTextBox.AppendText(receivedData + "\n");
+                        }
+
+
+                        // 确保文本框自动滚动到最后一行
+                        ReceiveTextBox.ScrollToEnd();
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"接收数据时发生错误: {ex.Message}");
+                });
+            }
+        }
+        /*   private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+
+            try
+            {
+            // 从串口读取现有的数据
+            byte[] buffer = new byte[serialport2.BytesToRead]; // 创建一个数组，其大小等于当前可读取的字节数  
+            int numBytesRead = serialport2.Read(buffer, 0, buffer.Length); // 读取数据到数组中  
+
+                //转换为十六进制字符串  
+                string hexData = BitConverter.ToString(buffer).Replace("-", " ");
+            // 创建一个字符数组来存储转换后的ASCII字符  
+
+
+            this.Dispatcher.Invoke(() =>                // 在UI线程上执行以下代码，以便更新UI元素
+            {
+            // 如果选中了HEX显示选项
+            if (check_HEX.IsChecked == true)
+            {
+            // 将接收到的数据转换为十六进制字符串
+            // string hexData = BitConverter.ToString(Encoding.ASCII.GetBytes(receivedData)).Replace("-", " ");
+            // 将转换后的十六进制字符串追加到接收文本框中
+            ReceiveTextBox.AppendText(hexData + "\n");
+            }
+            else if (check_ASCII.IsChecked == true)
+            {
+            string receivedData = Encoding.UTF8.GetString(buffer, 0, numBytesRead);
+            ReceiveTextBox.AppendText(receivedData + "\n");
+            }
+            ReceiveTextBox.ScrollToEnd();
+            });
+            }
+            catch (Exception ex)
+            {
+            this.Dispatcher.Invoke(() =>
+            {
+            MessageBox.Show($"接收数据时发生错误: {ex.Message}");
+            });
+            }
+
+        }*/
+
+        #region 显示的按钮
         // 检查字符串是否仅包含十六进制字符，并且长度是偶数
         private bool IsHexString(string input)
         {
@@ -370,206 +704,12 @@ namespace gangway_controller
         {
             ReceiveTextBox.Clear();
         }
-    
-        //姿态数据计算
-        private double CalculateAngle(int angle)
-        {
-            if (angle < 32767)
-            {
-                return angle * 0.01;
-            }
-            else
-            {
-                return (angle - 65536) * 0.01;
-            }
-        }
-        private double currentRoll;
-        private double currentPitch;
-        private double currentYaw;
-        private List<byte> buffer = new List<byte>(); // 缓冲区定义
-        /* public bool TryParseFrame()
-         {
-             while (buffer.Count >= 17) // 确保有足够的数据来处理
-             {
-                 // 查找帧头 FA AF F1
-                 bool frameFound = false;
-                 for (int i = 0; i <= buffer.Count - 17; i++)
-                 {
-                     if (buffer[i] == 0xFA && buffer[i + 1] == 0xAF && buffer[i + 2] == 0xF1)
-                     {
-                         frameFound = true;
-
-                         // 校验和验证
-                         byte expectedChecksum = buffer[i + 16];
-                         byte calculatedChecksum = CalculateSumChecksum(buffer.ToArray(), i, i + 15);
-                         if (expectedChecksum == calculatedChecksum)
-                         {
-                             // 提取角度数据
-                             int rollRaw = (buffer[i + 4] << 8) | buffer[i + 5];
-                             int pitchRaw = (buffer[i + 6] << 8) | buffer[i + 7];
-                             int yawRaw = (buffer[i + 8] << 8) | buffer[i + 9];
-
-                             currentRoll = CalculateAngle(rollRaw);
-                             currentPitch = CalculateAngle(pitchRaw);
-                             currentYaw = CalculateAngle(yawRaw);
-
-                             // 移除已处理的数据
-                             buffer.RemoveRange(0, i + 17);
-                             return true; // 成功解析了一帧数据
-                         }
-                         else
-                         {
-                             // 校验和不匹配，跳过该帧
-                             buffer.RemoveRange(0, i + 1);
-                             break;
-                         }
-                     }
-                 }
-
-                 if (!frameFound)
-                 {
-                     // 没有找到帧头，清除无效数据
-                     buffer.Clear();
-                 }
-             }
-             return false; // 未成功解析任何帧数据
-         }
-         */
-        // 接收数据的方法
-
-        private bool TryParseFrame()
-        {
-            for (int i = 0; i <= buffer.Count - 17; i++)
-            {
-                if (buffer[i] == 0xFA && buffer[i + 1] == 0xAF && buffer[i + 2] == 0xF1)
-                {
-                    if (buffer.Count < i + 17) continue;
-
-                    byte expectedChecksum = buffer[i + 16];
-                    byte calculatedChecksum = CalculateSumChecksum(buffer.ToArray(), i, i + 15);
-                    if (expectedChecksum == calculatedChecksum)
-                    {
-                        int rollRaw = (buffer[i + 4] << 8) | buffer[i + 5];
-                        int pitchRaw = (buffer[i + 6] << 8) | buffer[i + 7];
-                        int yawRaw = (buffer[i + 8] << 8) | buffer[i + 9];
-
-                        currentRoll = CalculateAngle(rollRaw);
-                        currentPitch = CalculateAngle(pitchRaw);
-                        currentYaw = CalculateAngle(yawRaw);
-
-                        buffer.RemoveRange(i, 17);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-
-        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            try
-            {
-                while (serialport2.BytesToRead > 0)
-                {
-                    byte[] tempBuffer = new byte[serialport2.BytesToRead];
-                    int numBytesRead = serialport2.Read(tempBuffer, 0, tempBuffer.Length);
-
-                    // 将新接收的数据添加到缓冲区
-                    buffer.AddRange(tempBuffer);
-
-                    // 解析帧数据并更新姿态数据
-                    bool frameParsed = TryParseFrame();
-
-                    this.Dispatcher.Invoke(() =>
-                    {
-                            // 如果选中了HEX显示选项
-                            if (check_HEX.IsChecked == true)
-                            {
-                            if (check_zitai.IsChecked == true)
-                            {
-                                if (frameParsed)
-                                {
-                                    // 仅显示姿态数据
-                                    ReceiveTextBox.AppendText($"Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}\n");
-                                    /*{}: 大括号用于指示插入变量的位置。 currentRoll: 这是要插入的变量。假设currentRoll是一个浮点数变量。
-        :F2: 这是格式说明符。F表示浮点数格式，2表示保留两位小数。*/   
-                                }
-                            }
-                            else 
-                            {
-                                string hexData = BitConverter.ToString(tempBuffer).Replace("-", " ");
-                                ReceiveTextBox.AppendText(hexData + "\n");
-                            }
-
-                            }
-                            else if (check_ASCII.IsChecked == true)
-                            {
-                                string receivedData = Encoding.UTF8.GetString(tempBuffer, 0, numBytesRead);
-                                ReceiveTextBox.AppendText(receivedData + "\n");
-                            }
-
-
-                                // 确保文本框自动滚动到最后一行
-                                ReceiveTextBox.ScrollToEnd();
-                            });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            MessageBox.Show($"接收数据时发生错误: {ex.Message}");
-                        });
-                    }
-                }
-        /*   private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-
-            try
-            {
-            // 从串口读取现有的数据
-            byte[] buffer = new byte[serialport2.BytesToRead]; // 创建一个数组，其大小等于当前可读取的字节数  
-            int numBytesRead = serialport2.Read(buffer, 0, buffer.Length); // 读取数据到数组中  
-
-                //转换为十六进制字符串  
-                string hexData = BitConverter.ToString(buffer).Replace("-", " ");
-            // 创建一个字符数组来存储转换后的ASCII字符  
-
-
-            this.Dispatcher.Invoke(() =>                // 在UI线程上执行以下代码，以便更新UI元素
-            {
-            // 如果选中了HEX显示选项
-            if (check_HEX.IsChecked == true)
-            {
-            // 将接收到的数据转换为十六进制字符串
-            // string hexData = BitConverter.ToString(Encoding.ASCII.GetBytes(receivedData)).Replace("-", " ");
-            // 将转换后的十六进制字符串追加到接收文本框中
-            ReceiveTextBox.AppendText(hexData + "\n");
-            }
-            else if (check_ASCII.IsChecked == true)
-            {
-            string receivedData = Encoding.UTF8.GetString(buffer, 0, numBytesRead);
-            ReceiveTextBox.AppendText(receivedData + "\n");
-            }
-            ReceiveTextBox.ScrollToEnd();
-            });
-            }
-            catch (Exception ex)
-            {
-            this.Dispatcher.Invoke(() =>
-            {
-            MessageBox.Show($"接收数据时发生错误: {ex.Message}");
-            });
-            }
-
-        }*/
-
-
+        #endregion
 
 
 
         #endregion
+
         #region 主推
         public void Motorinit()
         {
@@ -626,8 +766,50 @@ namespace gangway_controller
         private void Send_Click_zhutui(object sender, RoutedEventArgs e)
         {
             if (serialport2.IsOpen)
-            {
-                MessageBox.Show("FPGA板暂不支持输入发送模式，请用挡位调节！");
+            {      
+                Motorinit();
+                if (MCU[6] == 0) { MCU[6] = 0x5A; }
+                if (MCU[7] == 0) { MCU[7] = 0x5A; }   
+                switch (NumericTextBox0.Text)
+                {
+                    case "1":
+                        MCU[5] = 0x10;
+                        break;
+                    case "2":
+                        MCU[5] = 0x20;
+                        break;
+                    case "3":
+                        MCU[5] = 0x30;
+                        break;
+                    default:
+                        MCU[5] = 0x0A;
+                        break;
+                }
+                try
+                {
+                    Send0.IsEnabled = false;
+                    if (check_ARM.IsChecked == false)
+                    {
+                        serialport2.Write(MCU, 0, 9);
+                    }
+                    else
+                    {
+                         serialport2.Write(MCU, 2, 7);
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+                }
+                finally
+                {
+                    Send0.IsEnabled = true;
+                }
+
+
+
+                //  MessageBox.Show("FPGA板暂不支持输入发送模式，请用挡位调节！");
                 /*  string inputText = mainmotor.Text;
                   if (inputText != "")
                   {
@@ -820,6 +1002,7 @@ namespace gangway_controller
 
 
         #endregion
+
         #region 舵
 
        
@@ -1120,6 +1303,7 @@ namespace gangway_controller
         }
 
         #endregion
+
         #region 侧推
     
         private void Send_Click_cetui(object sender, RoutedEventArgs e)
@@ -1328,6 +1512,7 @@ namespace gangway_controller
 
 
         #endregion
+
         #region ARM
         public void ARMinit()
         {
@@ -1385,7 +1570,7 @@ namespace gangway_controller
             {
                 RemakeAllArm.IsEnabled = true;
             }
-            MessageBox.Show("所有输入已经复位，请重新输入！");
+           // MessageBox.Show("所有输入已经复位，请重新输入！");
 
         }
         private /*async*/ void StopArm(object sender, RoutedEventArgs e)
@@ -1457,7 +1642,7 @@ namespace gangway_controller
             // 检查并转换所有浮点数输入
             bool isFloatConversionSuccessful = true;
 
-            // 转换和检查函数
+            
             void ConvertAndCheckInput(string inputText, int startIndex)
             {
                 if (float.TryParse(inputText, out float floatValue))
@@ -1467,32 +1652,22 @@ namespace gangway_controller
                         byte[] floatBytes = BitConverter.GetBytes(floatValue);
                         Array.Copy(floatBytes, 0, MCU, startIndex, floatBytes.Length);
                     }
-                    else
-                    {
-                        MessageBox.Show("超出范围！");
-                        isFloatConversionSuccessful = false;
-                        return;
-                    }
+                   
                 }
-                else
-                {
-                    isFloatConversionSuccessful = false;
-                    MessageBox.Show("请输入有效的浮点数。");
-                    return;
-                }
+              
             }
 
             // 转换四个输入文本
-            ConvertAndCheckInput(shouderInput, 6);
+            ConvertAndCheckInput(shouderInput, 7);
             if (!isFloatConversionSuccessful) return;
 
-            ConvertAndCheckInput(dabiInput, 10);
+            ConvertAndCheckInput(dabiInput, 11);
             if (!isFloatConversionSuccessful) return;
 
-            ConvertAndCheckInput(xiaobiInput, 14);
+            ConvertAndCheckInput(xiaobiInput, 15);
             if (!isFloatConversionSuccessful) return;
 
-            ConvertAndCheckInput(wanbuInput, 18);
+            ConvertAndCheckInput(wanbuInput, 19);
             if (!isFloatConversionSuccessful) return;
 
             // 计算校验和
@@ -1575,7 +1750,7 @@ namespace gangway_controller
                     else
                     {
                         
-                        MessageBox.Show("请输入。");
+                        MessageBox.Show("请输入!");
                     }
 
 
@@ -1642,7 +1817,7 @@ namespace gangway_controller
                     else
                     {
                        
-                        MessageBox.Show("请输入有效的浮点数。");
+                        MessageBox.Show("请输入!");
                     }
 
 
@@ -1707,7 +1882,7 @@ namespace gangway_controller
                     else
                     {
                       
-                        MessageBox.Show("请输入有效的浮点数。");
+                        MessageBox.Show("请输入!");
                     }
 
 
@@ -1769,7 +1944,7 @@ namespace gangway_controller
                     }
                     else
                     {
-                        MessageBox.Show("请输入有效的浮点数。");
+                        MessageBox.Show("请输入!");
                     }
 
 
@@ -1795,7 +1970,14 @@ namespace gangway_controller
                 MCU[24] = CalculateSumChecksum(MCU, 2, 23);
                 try
                 {
-                    serialport2.Write(MCU, 0, 32);
+                    if (check_ARM.IsChecked == false)
+                    {
+                        serialport2.Write(MCU, 0, 32);
+                    }
+                    else
+                    {
+                        serialport2.Write(MCU, 2, 24);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -2329,14 +2511,16 @@ namespace gangway_controller
 
 
 
-        #endregion
+
+
 
         #endregion
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
+        #endregion
 
-        }
+
+
+      
 
 
     }

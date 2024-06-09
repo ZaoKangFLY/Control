@@ -1,6 +1,10 @@
-D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\WpfApp1.exe
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\WpfApp1.exe.config
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\WpfApp1.exe
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\WpfApp1.pdb
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\DynamicDataDisplay.dll
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\UVMS.csproj.AssemblyReference.cache
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\PC.baml
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\PC.g.cs
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\MainWindow.g.cs
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\App.g.cs
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\WpfApp1_MarkupCompile.cache
@@ -10,8 +14,6 @@ D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\WpfApp1.g.resources
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\WpfApp1.Properties.Resources.resources
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\UVMS.csproj.GenerateResource.cache
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\UVMS.csproj.CoreCompileInputs.cache
+D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\UVMS.csproj.CopyComplete
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\WpfApp1.exe
 D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\WpfApp1.pdb
-D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\WpfApp1.pdb
-D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\bin\Debug\DynamicDataDisplay.dll
-D:\Documents\KeTi\WPF串口编程\UVMS\WpfApp1\obj\Debug\UVMS.csproj.CopyComplete
