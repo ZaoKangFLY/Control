@@ -284,13 +284,15 @@ namespace gangway_controller
             serialport2.DataReceived += SerialPort_DataReceived;
 
         }//串口初始化  
-
+ 
         private void Shuaxin_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+ 
                 if (serialport2.IsOpen)
                 {
+                  
                     serialport2.Close();
                     status.Fill = System.Windows.Media.Brushes.Red;
                     shuaxin.Content = "打开串口";
@@ -319,11 +321,13 @@ namespace gangway_controller
                     {
                         serialport2.Parity = Parity.None;
                     }
+         
                     serialport2.Open();
                     status.Fill = System.Windows.Media.Brushes.Green;
                     shuaxin.Content = "关闭串口";
                    
                 }
+     
 
             }
             catch (Exception e7)
@@ -1521,6 +1525,7 @@ namespace gangway_controller
             MCU[5] = 0x18;
             MCU[6] = 0x00;
             MCU[25] = 0xFE;
+            if (MCU[23] == 0xFF || MCU[23]==0xAF) { MCU[23] = 0x00; }//0x0A/0x0F
         }
      
         
@@ -1540,14 +1545,11 @@ namespace gangway_controller
             {
                 MCU[i] = 0x00;
             }
-            shouder.Text = "";
-            dabi.Text = "";
-            xiaobi.Text = "";
-            wanbu.Text = "";
-            DIshouder.Text = "";
-            DIdabi.Text = "";
-            DIxiaobi.Text = "";
-            DIwanbu.Text = "";
+            shouder.Text = "0";
+            dabi.Text = "0";
+            xiaobi.Text = "0";
+            wanbu.Text = "0";
+
             try
             {
                 RemakeAllArm.IsEnabled = false;
@@ -1573,24 +1575,38 @@ namespace gangway_controller
            // MessageBox.Show("所有输入已经复位，请重新输入！");
 
         }
-        private /*async*/ void StopArm(object sender, RoutedEventArgs e)
+        private bool isStopped = false;
+        private void ResetArm(object sender, RoutedEventArgs e)
         {
             if (!serialport2.IsOpen)
             {
-                MessageBox.Show("串口未打卡!");
+                MessageBox.Show("串口未打开!");
                 return;
             }
             ARMinit();
-            MCU[23] = 0xFF;
-            int ans = 0xFA + 0xAF + 0x04 + 0x18 + 0xFF;
-            MCU[24] = (byte)ans;
-            for (int i = 7; i < 23; i++)
-            {
-                MCU[i] = 0x00;
-            }
+            MCU[23] = 0xAF;
+            // 计算校验和
+            int ans = 0xFA + 0xAF + 0x04 + 0x18 + 0xAF;
+             MCU[24] = (byte)ans;
+             for (int i = 7; i < 23; i++)
+                {
+                    MCU[i] = 0x00;
+                }
+            shouder.Text = "";
+            dabi.Text = "";
+            xiaobi.Text = "";
+            wanbu.Text = "";
+            DIshouder.Text = "";
+            DIdabi.Text = "";
+            DIxiaobi.Text = "";
+            DIwanbu.Text = "";
+            StopAllArm.Content = "停止";
+            StopAllArm.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFE47C7C"));
+            isStopped = false;
             try
             {
                 StopAllArm.IsEnabled = false;
+
                 if (check_ARM.IsChecked == false)
                 {
                     /*await Task.Run(() =>*/
@@ -1601,7 +1617,6 @@ namespace gangway_controller
                     /*await Task.Run(() => */
                     serialport2.Write(MCU, 2, 24)/*)*/;
                 }
-                // MessageBox.Show("已经停机，全部重新初始化");
             }
             catch (Exception ex)
             {
@@ -1611,10 +1626,77 @@ namespace gangway_controller
             {
                 StopAllArm.IsEnabled = true;
             }
-
-            
-           
         }
+        private /*async*/ void StopArm(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("串口未打开!");
+                return;
+            }
+
+            ARMinit();
+
+            if (isStopped)
+            {
+                MCU[23] = 0x00; // 继续
+            }
+            else
+            {
+                MCU[23] = 0xFF; // 停机
+            }
+
+            // 计算校验和
+            MCU[24] = CalculateSumChecksum(MCU, 2, 23);
+
+            try
+            {
+                StopAllArm.IsEnabled = false;
+
+                if (check_ARM.IsChecked == false)
+                {
+                    /*await Task.Run(() =>*/
+                    serialport2.Write(MCU, 0, 32)/*)*/;
+                }
+                else
+                {
+                    /*await Task.Run(() => */
+                    serialport2.Write(MCU, 2, 24)/*)*/;
+                }
+
+                // 更新按钮的状态
+                isStopped = !isStopped;
+                UpdateButtonAppearance();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+            }
+            finally
+            {
+                StopAllArm.IsEnabled = true;
+            }
+        }
+
+        private void UpdateButtonAppearance()
+        {
+            if (isStopped)
+            {
+                StopAllArm.Content = "继续";
+                StopAllArm.Background = new SolidColorBrush(Colors.Green);
+            }
+            else
+            {
+                StopAllArm.Content = "停止";
+                StopAllArm.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFE47C7C"));
+            }
+        }
+
+
+
+
+
+
         private void SendArm(object sender, RoutedEventArgs e)
         {
             if (!serialport2.IsOpen)
@@ -2514,14 +2596,15 @@ namespace gangway_controller
 
 
 
+
+
+
+
+
         #endregion
 
         #endregion
 
-
-
-      
-
-
+     
     }
 }

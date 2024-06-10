@@ -211,8 +211,9 @@
                 <Button Content="+" Click="IncrementButton_Click_wan" Height="27" Canvas.Left="272" Canvas.Top="159" Width="30" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
 
-                <Button x:Name="RemakeAllArm" Content="复位" Canvas.Left="58" Canvas.Top="12" Click="ReamkeArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Background="#FFDDDDDD"/>
-                <Button x:Name="StopAllArm" Content="停机" Canvas.Left="350" Canvas.Top="13" Click="StopArm" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Background="#FFE47C7C"/>
+                <Button x:Name="RemakeAllArm" Content="复位" Canvas.Left="198" Canvas.Top="13" Click="ReamkeArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Background="#FFDDDDDD"/>
+                <Button x:Name="ResetAllArm" Content="重置" Canvas.Left="56" Canvas.Top="12" Click="ResetArm" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Background="#FFDDDDDD"/>
+                <Button x:Name="StopAllArm" Content="停止" Canvas.Left="350" Canvas.Top="13" Click="StopArm" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Background="#FFE47C7C"/>
                 <Button x:Name="SendAllArm" Content="发送" Canvas.Left="61" Canvas.Top="191" Click="SendArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Background="#FFDDDDDD" FontWeight="Bold"/>
                 <Button x:Name="Send4" Content="发送" Canvas.Left="136" Canvas.Top="55" Click="Send_Click_jian" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
                 <Button x:Name="Send5" Content="发送" Canvas.Left="136" Canvas.Top="88" Click="Send_Click_big" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
@@ -251,25 +252,25 @@
                     Background="White"
                     />
 
-                <CheckBox x:Name="check_zitai" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="776,109,0,0" Checked="check_zitai_Checked" Grid.ColumnSpan="2">
+                <CheckBox x:Name="check_zitai" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,127,0,0" Checked="check_zitai_Checked" Grid.Column="1">
                     <CheckBox.LayoutTransform>
                         <ScaleTransform ScaleX="2" ScaleY="2"/>
                     </CheckBox.LayoutTransform>
                 </CheckBox>
-                <CheckBox x:Name="check_ASCII" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,220,0,0" IsChecked="False" Checked="check_ASCII_Checked" Grid.Column="1">
+                <CheckBox x:Name="check_ASCII" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,196,0,0" IsChecked="False" Checked="check_ASCII_Checked" Grid.Column="1">
                     <CheckBox.LayoutTransform>
                         <ScaleTransform ScaleX="2" ScaleY="2"/>
                     </CheckBox.LayoutTransform>
                 </CheckBox>
-                <CheckBox x:Name="check_HEX" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,188,0,0" Checked="check_HEX_Checked" Grid.Column="1">
+                <CheckBox x:Name="check_HEX" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,164,0,0" Checked="check_HEX_Checked" Grid.Column="1">
                     <CheckBox.LayoutTransform>
                         <ScaleTransform ScaleX="2" ScaleY="2"/>
                     </CheckBox.LayoutTransform>
                 </CheckBox>
-                <Label Content="姿态显示" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="750,77,0,0" Height="32" Width="95" Grid.ColumnSpan="2"/>
-                <Label Content="ASCII" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="745,220,0,0" Height="32" Width="62" Grid.ColumnSpan="2"/>
-                <Label Content="HEX" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="745,192,0,0" Height="32" Width="40" RenderTransformOrigin="4.012,2.68"/>
-                <Button x:Name="clc" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_content" Width="88" Margin="750,154,0,0" Height="28" Background="#FFDDDDDD" BorderBrush="#FF151414" Grid.ColumnSpan="2"/>
+                <Label Content="姿态" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="745,123,0,0" Height="32" Width="55" Grid.ColumnSpan="2" RenderTransformOrigin="0.474,1.53"/>
+                <Label Content="ASCII" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="745,196,0,0" Height="32" Width="62" Grid.ColumnSpan="2"/>
+                <Label Content="HEX" FontFamily="FangSong" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="745,168,0,0" Height="32" Width="40" RenderTransformOrigin="4.012,2.68"/>
+                <Button x:Name="clc" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_content" Width="88" Margin="750,233,0,0" Height="28" Background="#FFDDDDDD" BorderBrush="#FF151414" Grid.ColumnSpan="2"/>
                 <Button x:Name="save" Content="保存" HorizontalAlignment="Left" VerticalAlignment="Top" Click="save_Click_content" Width="88" Margin="750,266,0,0" Height="27" Grid.ColumnSpan="2"/>
                 <Button x:Name="clc_send" Content="清空" HorizontalAlignment="Left" VerticalAlignment="Top" Click="clc_Click_send" Width="88" Margin="750,343,0,0" Height="27" RenderTransformOrigin="1.166,0.66" Grid.ColumnSpan="2"/>
 
@@ -294,7 +295,7 @@
                 <ComboBox x:Name="ALLComboBox" Margin="760,10,10,369" SelectionChanged="ALL_SelectionChanged" Grid.Row="1" />
             </Grid>
         </GroupBox>
- 
+
 
     </Grid>
 
