@@ -59,7 +59,8 @@ namespace gangway_controller
             check_HEX.IsChecked = true;
             // 初始化完成，设置标志为 true
             isInitialized = true;
-    
+            ALLComboBox.SelectedIndex = 0; // 设置默认选择项为第一个项，即 "All"
+
         }
 
         #region 通用
@@ -207,13 +208,12 @@ namespace gangway_controller
             plotter.LegendVisible = true;
 
             // 自定义标签提供者以设置轴标签格式
-          
 
-            // 设置定时器间隔为1秒
-            dispatcherTimer.Interval = TimeSpan.FromSeconds(1);
+         
 
             // 添加定时器Tick事件处理程序
             dispatcherTimer.Tick += timer_Tick;
+            // 设置定时器间隔为1秒
             dispatcherTimer.Interval = TimeSpan.FromSeconds(0.1);
             // 启用定时器
             dispatcherTimer.Start();
@@ -221,7 +221,7 @@ namespace gangway_controller
             // 自动调整视口以适应数据
             plotter.Viewport.FitToView();
 
-            Debug.WriteLine("Timer Started");
+        
         }
 
         private void timer_Tick(object sender, EventArgs e)
@@ -232,13 +232,13 @@ namespace gangway_controller
             // 如果解析成功，就将当前角度数据添加到数据源中
             if (TryParseFrame())
             {
-                // 调试信息
-                Debug.WriteLine($"Second: {currentSecond}, Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}");
+               
+
 
                 if (buttonbool)
                 {
                     // 如果滚屏模式启用，更新视口范围
-                    plotter.Viewport.Visible = new Rect(currentSecond - 5, -1, 10, 40);
+                    plotter.Viewport.Visible = new Rect(currentSecond +0, +0, 50, 90);//第一个值是X轴的起点，第二个是Y轴，第三个是X轴的区间大小，第四个是Y轴的区间大小。
                 }
                 else
                 {
@@ -407,13 +407,10 @@ namespace gangway_controller
         int rollRaw ;
         int pitchRaw ;
         int yawRaw ;
-       
-     
-
         
         private bool TryParseFrame()
         {
-            for (int i = 0; i <= buffer.Count - 17; i++)
+            for (int i = 0; i <= buffer.Count - 16; i++)//直连17否则16
             {  
                  if (buffer[i] == 0xAA && buffer[i + 2] == 0x0C)
                     {
@@ -429,7 +426,7 @@ namespace gangway_controller
                     }
                     if (buffer[i] == 0xFA && buffer[i + 1] == 0xAF && buffer[i + 2] == 0xF1)
                     {
-                        if (buffer.Count < i + 17) continue;
+                        if (buffer.Count < i + 16) continue;
                         byte expectedChecksum = buffer[i + 16];
                         byte checksum = CalculateSumChecksum(buffer.ToArray(), i, i + 15);
                         if (expectedChecksum == checksum)
@@ -459,7 +456,7 @@ namespace gangway_controller
                 {
                     yawDataSource.AppendAsync(base.Dispatcher, yawPoint);
                 }
-                buffer.RemoveRange(i, 17);
+                buffer.RemoveRange(i, 16);
                 return true;
             }
             return false;
@@ -1525,7 +1522,7 @@ namespace gangway_controller
             MCU[5] = 0x18;
             MCU[6] = 0x00;
             MCU[25] = 0xFE;
-            if (MCU[23] == 0xFF || MCU[23]==0xAF) { MCU[23] = 0x00; }//0x0A/0x0F
+            if (MCU[23] == 0xFF || MCU[23]==0xBF || MCU[23] == 0xAF || MCU[23] == 0xFA) { MCU[23] = 0x00; }//0x0A/0x0F
         }
      
         
@@ -1576,7 +1573,7 @@ namespace gangway_controller
 
         }
         private bool isStopped = false;
-        private void ResetArm(object sender, RoutedEventArgs e)
+        private void RunArm(object sender, RoutedEventArgs e)
         {
             if (!serialport2.IsOpen)
             {
@@ -1587,6 +1584,46 @@ namespace gangway_controller
             MCU[23] = 0xAF;
             // 计算校验和
             int ans = 0xFA + 0xAF + 0x04 + 0x18 + 0xAF;
+            MCU[24] = (byte)ans;
+            for (int i = 7; i < 23; i++)
+            {
+                MCU[i] = 0x00;
+            }
+            try
+            {
+                StopAllArm.IsEnabled = false;
+
+                if (check_ARM.IsChecked == false)
+                {
+                    /*await Task.Run(() =>*/
+                    serialport2.Write(MCU, 0, 32)/*)*/;
+                }
+                else
+                {
+                    /*await Task.Run(() => */
+                    serialport2.Write(MCU, 2, 24)/*)*/;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"发送数据时发生错误: {ex.Message}");
+            }
+            finally
+            {
+                StopAllArm.IsEnabled = true;
+            }
+        }
+        private void ResetArm(object sender, RoutedEventArgs e)
+        {
+            if (!serialport2.IsOpen)
+            {
+                MessageBox.Show("串口未打开!");
+                return;
+            }
+            ARMinit();
+            MCU[23] = 0xBF;
+            // 计算校验和
+            int ans = 0xFA + 0xAF + 0x04 + 0x18 + 0xBF;
              MCU[24] = (byte)ans;
              for (int i = 7; i < 23; i++)
                 {
@@ -1639,7 +1676,7 @@ namespace gangway_controller
 
             if (isStopped)
             {
-                MCU[23] = 0x00; // 继续
+                MCU[23] = 0xFA; // 继续
             }
             else
             {
@@ -2601,10 +2638,11 @@ namespace gangway_controller
 
 
 
-        #endregion
 
         #endregion
 
-     
+        #endregion
+
+      
     }
 }

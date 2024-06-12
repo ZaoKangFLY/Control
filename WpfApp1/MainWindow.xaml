@@ -30,52 +30,48 @@
                 </TransformGroup>
             </GroupBox.RenderTransform>
             <Canvas Height="271"  >
-                <Button x:Name="Stopmotor" Content="停机" Canvas.Left="360" Canvas.Top="10" Click="StopMotor" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Background="#FFE47C7C"/>
-                <Label Content="主推v" Canvas.Left="10" Canvas.Top="56" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox x:Name="mainmotor" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Top"  Canvas.Left="95" Canvas.Top="64"  Width="60" />
-                <Label Content="水平舵°" Canvas.Left="10" Canvas.Top="198" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox x:Name="horizontal" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="95" Canvas.Top="201"  Width="60"  />
-                <Label Content="垂直舵°" Canvas.Left="10" Canvas.Top="230" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                <TextBox x:Name="vertical" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="95" Canvas.Top="236" Width="60" />
-                <Label Content="侧推v&#xA;&#xA;1500+" Canvas.Left="10" Canvas.Top="109" HorizontalAlignment="Left" VerticalAlignment="Center" Height="80"/>
-                <TextBox x:Name="lateral" HorizontalAlignment="Left" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="95" Canvas.Top="158" Width="60"/>
-                <Grid HorizontalAlignment="Left" VerticalAlignment="Top" Width="109" Canvas.Left="176" Canvas.Top="61">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+                <Button x:Name="Stopmotor" Content="停机" Canvas.Left="360" Canvas.Top="10" Click="StopMotor" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Background="#FFE47C7C"/>
+                <Label Content="主推器" Canvas.Left="14" Canvas.Top="101" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center" Width="72"/>
+                <TextBox x:Name="mainmotor" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"  Canvas.Left="116" Canvas.Top="105"  Width="51" />
+                <Label Content="水平舵°" Canvas.Left="14" Canvas.Top="152" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Top" Width="92"/>
+                <TextBox x:Name="horizontal" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Top"  Canvas.Left="116" Canvas.Top="156"  Width="51"  />
+                <Label Content="垂直舵°" Canvas.Left="14" Canvas.Top="201" HorizontalAlignment="Center" VerticalAlignment="Top" Width="92"/>
+                <TextBox x:Name="vertical" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Top"   Canvas.Left="116" Canvas.Top="205" Width="51" />
+                <Label Content="侧推1500+" Canvas.Left="14" Canvas.Top="53" HorizontalAlignment="Center" VerticalAlignment="Center" Height="34" Width="103"/>
+                <TextBox x:Name="lateral" HorizontalAlignment="Center" TextWrapping="Wrap"  VerticalAlignment="Center"   Canvas.Left="116" Canvas.Top="58" Width="51"/>
+                <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Width="109" Canvas.Left="179" Canvas.Top="103" Height="28">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="55*"/>
-                        <ColumnDefinition Width="30*"/>
-                        <ColumnDefinition Width="24*"/>
-                        <ColumnDefinition Width="Auto" MinWidth="0"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button Content="-" Grid.Column="0" Click="DecrementButton_Click0" Grid.ColumnSpan="2" Margin="0,0,21,0"/>
-                    <TextBox x:Name="NumericTextBox0" Grid.Column="1" Text="0" VerticalAlignment="Center" Margin="33,0,17,0" Height="25" Grid.ColumnSpan="2"/>
-                    <Button Content="+" Grid.Column="2" Click="IncrementButton_Click0" Margin="12,0,6,0" Height="27" VerticalAlignment="Bottom" Grid.ColumnSpan="2"/>
+                    <Button Content="-" Grid.Column="0" Click="DecrementButton_Click0" Margin="0,0,72,0" Grid.ColumnSpan="2"/>
+                    <TextBox x:Name="NumericTextBox0" Grid.Column="1" Text="0" VerticalAlignment="Center" HorizontalAlignment="Center" Width="34" Height="28"/>
+                    <Button Content="+" Grid.Column="1" Click="IncrementButton_Click0" HorizontalAlignment="Left" Width="37" Margin="72,0,0,0"/>
                 </Grid>
-                <Label Content="左" Canvas.Left="86" Canvas.Top="107" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Height="33" Width="38"/>
-                <Label Content="右" Canvas.Left="148" Canvas.Top="107" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Height="33" Width="38"/>
-                <CheckBox x:Name="check_left"  Canvas.Left="111" Canvas.Top="107" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True">
+
+                <Label Content="左" Canvas.Left="96" FontSize="20" Canvas.Top="17" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="1" Height="37" Width="38" RenderTransformOrigin="0.577,0.902"/>
+                <Label Content="右" Canvas.Left="171" FontSize="20"  Canvas.Top="16" FontFamily="FangSong" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Column="1" Height="34" Width="30"/>
+                <CheckBox x:Name="check_left"  Canvas.Left="131" Canvas.Top="18" RenderTransformOrigin="0.062,1.073" Height="18" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True">
                     <CheckBox.LayoutTransform>
                         <ScaleTransform ScaleX="2" ScaleY="2"  />
                     </CheckBox.LayoutTransform>
                 </CheckBox>
-                <CheckBox x:Name="check_right" Canvas.Left="176" Canvas.Top="107" RenderTransformOrigin="0.062,1.073" Height="18" Width="20" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True" >
+                <CheckBox x:Name="check_right" Canvas.Left="210" Canvas.Top="18" RenderTransformOrigin="0.062,1.073" Height="18" Width="17" HorizontalAlignment="Left" VerticalAlignment="Top" IsChecked="True" >
                     <CheckBox.LayoutTransform>
                         <ScaleTransform ScaleX="2" ScaleY="2"  />
                     </CheckBox.LayoutTransform>
                 </CheckBox>
-                <Button x:Name="Send0" Content="发送" HorizontalAlignment="Center" VerticalAlignment="Top" Canvas.Left="301" Canvas.Top="62" Click="Send_Click_zhutui" Width="68" />
-                <Button x:Name="Send1" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="298" Canvas.Top="202" Click="Send_Click_shuipingDuo" Width="68" />
-                <Button x:Name="Send2" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="298" Canvas.Top="234" Click="Send_Click_chuizhiDuo" Width="68" />
-                <Button x:Name="Send3" Content="发送" HorizontalAlignment="Left" VerticalAlignment="Top" Canvas.Left="300" Canvas.Top="160" Click="Send_Click_cetui" Width="68" RenderTransformOrigin="0.391,0.564" />
-                <Button x:Name="stop_0" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="388" Canvas.Top="62" Click="stop_Click_zhutui" />
-                <Button x:Name="stop_1" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="388" Canvas.Top="200" Click="stop_Click_shuipingDuo" />
-                <Button x:Name="stop_2" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="388" Canvas.Top="235" Click="stop_Click_chuizhiDuo" />
-                <Button x:Name="stop_3" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="388" Canvas.Top="158" Click="stop_Click_cetui" />
-                <Slider x:Name="shuiping_slider" Canvas.Left="166" Canvas.Top="204" Width="120"  ValueChanged="shuipingSlider_ValueChanged"
-                     SmallChange="5" Maximum="120" Minimum="60" Value="90" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Button x:Name="Send0" Content="发送" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="311" Canvas.Top="104" Click="Send_Click_zhutui" Width="60" />
+                <Button x:Name="Send1" Content="发送" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="311" Canvas.Top="155" Click="Send_Click_shuipingDuo" Width="60" />
+                <Button x:Name="Send2" Content="发送" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="311" Canvas.Top="204" Click="Send_Click_chuizhiDuo" Width="60" />
+                <Button x:Name="Send3" Content="发送" HorizontalAlignment="Center" VerticalAlignment="Center" Canvas.Left="311" Canvas.Top="57" Click="Send_Click_cetui" Width="60" RenderTransformOrigin="0.391,0.564" />
+                <Button x:Name="stop_0" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="390" Canvas.Top="104" Click="stop_Click_zhutui" Width="45" />
+                <Button x:Name="stop_1" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="390" Canvas.Top="155" Click="stop_Click_shuipingDuo" Width="45" />
+                <Button x:Name="stop_2" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="390" Canvas.Top="204" Click="stop_Click_chuizhiDuo" Width="45" />
+                <Button x:Name="stop_3" Content="停止" HorizontalAlignment="Left" VerticalAlignment="Center" Canvas.Left="390" Canvas.Top="57" Click="stop_Click_cetui" Width="45" />
+                <Slider x:Name="shuiping_slider" Canvas.Left="178" Canvas.Top="158" Width="120"  ValueChanged="shuipingSlider_ValueChanged"
+                     SmallChange="5" Maximum="120" Minimum="60" Value="90" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Slider.Template>
                         <ControlTemplate TargetType="{x:Type Slider}">
                             <Grid>
@@ -94,7 +90,7 @@
                         </ControlTemplate>
                     </Slider.Template>
                 </Slider>
-                <Slider x:Name="chuizhi_slider" Canvas.Left="166" Canvas.Top="238" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top"  ValueChanged="chuizhiSlider_ValueChanged"
+                <Slider x:Name="chuizhi_slider" Canvas.Left="178" Canvas.Top="207" Width="120" HorizontalAlignment="Center" VerticalAlignment="Top"  ValueChanged="chuizhiSlider_ValueChanged"
                              SmallChange="5" Maximum="120" Minimum="60" Value="90" >
                     <Slider.Template>
                         <ControlTemplate TargetType="{x:Type Slider}">
@@ -114,7 +110,7 @@
                         </ControlTemplate>
                     </Slider.Template>
                 </Slider>
-                <Slider x:Name="cetui_slider" Canvas.Left="168" Canvas.Top="161" Width="120" HorizontalAlignment="Left" VerticalAlignment="Top"  ValueChanged="cetuiSlider_ValueChanged"
+                <Slider x:Name="cetui_slider" Canvas.Left="178" Canvas.Top="60" Width="120" HorizontalAlignment="Center" VerticalAlignment="Top"  ValueChanged="cetuiSlider_ValueChanged"
                           SmallChange="5" Maximum="500" >
                     <Slider.Template>
                         <ControlTemplate TargetType="{x:Type Slider}">
@@ -211,9 +207,10 @@
                 <Button Content="+" Click="IncrementButton_Click_wan" Height="27" Canvas.Left="272" Canvas.Top="159" Width="30" HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
 
-                <Button x:Name="RemakeAllArm" Content="复位" Canvas.Left="198" Canvas.Top="13" Click="ReamkeArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Background="#FFDDDDDD"/>
-                <Button x:Name="ResetAllArm" Content="重置" Canvas.Left="56" Canvas.Top="12" Click="ResetArm" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Background="#FFDDDDDD"/>
-                <Button x:Name="StopAllArm" Content="停止" Canvas.Left="350" Canvas.Top="13" Click="StopArm" HorizontalAlignment="Left" VerticalAlignment="Center" Width="75" Background="#FFE47C7C"/>
+                <Button x:Name="RemakeAllArm" Content="复位" Canvas.Left="244" Canvas.Top="13" Click="ReamkeArm" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Background="#FFDDDDDD"/>
+                <Button x:Name="ResetAllArm" Content="重置" Canvas.Left="142" Canvas.Top="13" Click="ResetArm" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75" Background="#FFDDDDDD"/>
+                <Button x:Name="RunAllArm" Content="启动" Canvas.Left="40" Canvas.Top="13" Click="RunArm" HorizontalAlignment="Center" VerticalAlignment="Top" Width="75" Background="#FFDDDDDD"/>
+                <Button x:Name="StopAllArm" Content="停止" Canvas.Left="350" Canvas.Top="13" Click="StopArm" HorizontalAlignment="Center" VerticalAlignment="Center" Width="75" Background="#FFE47C7C"/>
                 <Button x:Name="SendAllArm" Content="发送" Canvas.Left="61" Canvas.Top="191" Click="SendArm" HorizontalAlignment="Left" VerticalAlignment="Top" Width="74" Background="#FFDDDDDD" FontWeight="Bold"/>
                 <Button x:Name="Send4" Content="发送" Canvas.Left="136" Canvas.Top="55" Click="Send_Click_jian" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
                 <Button x:Name="Send5" Content="发送" Canvas.Left="136" Canvas.Top="88" Click="Send_Click_big" HorizontalAlignment="Left" VerticalAlignment="Top" Width="49"/>
@@ -278,23 +275,33 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="曲线" Margin="0,178,10,22" Grid.RowSpan="2" BorderBrush="#FF5BB1E4" Grid.Column="1" Grid.Row="1">
-            <Grid>
+        <GroupBox Header="曲线" Margin="10,178,10,22" BorderBrush="#FF5BB1E4" Grid.Column="1" Grid.Row="1" Grid.RowSpan="2">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="400*"/>
-                    <RowDefinition Height="6*"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <d3:ChartPlotter x:Name="plotter" Margin="4,10,121,13" Grid.Row="1">
-                    <d3:VerticalAxisTitle Content="角度 (°)"/>
-                    <d3:HorizontalAxisTitle Content="时间 (s)"/>
+                <d3:ChartPlotter x:Name="plotter" Margin="10,10,10,10" Grid.Row="1" Grid.Column="0">
+                    <d3:Header x:Name="headerx" Content="ROV姿态曲线" FontSize="20" HorizontalAlignment="Center" FontWeight="Bold" />
+                    <d3:VerticalAxisTitle Content="角度 (°)" FontSize="20" FontWeight="Bold" />
+                    <d3:HorizontalAxisTitle Content="时间 (s)" FontSize="20" FontWeight="Bold"/>
                 </d3:ChartPlotter>
-                <Button Content="滚屏" Click="Run_Click" Margin="760,266,10,112" Grid.Row="1" />
-                <Button Content="截图" Click="Grasp_Click"  Margin="760,315,10,62" Grid.RowSpan="2" />
-                <Button Content="清屏" Click="Clear_Click"  Margin="760,216,10,161" Grid.Row="1" />
-                <ComboBox x:Name="ALLComboBox" Margin="760,10,10,369" SelectionChanged="ALL_SelectionChanged" Grid.Row="1" />
+                <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1" Margin="10">
+
+                    <ComboBox x:Name="ALLComboBox" Width="100" Margin="10" SelectionChanged="ALL_SelectionChanged">
+
+                    </ComboBox>
+                    <Button Content="滚屏" Click="Run_Click" Margin="10" Width="76" />
+                    <Button Content="截图" Click="Grasp_Click" Margin="10" Width="76" />
+                    <Button Content="清屏" Click="Clear_Click" Margin="10" Width="76" />
+                </StackPanel>
             </Grid>
         </GroupBox>
+
 
 
     </Grid>
