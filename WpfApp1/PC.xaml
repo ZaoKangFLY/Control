@@ -1,0 +1,17 @@
+﻿<Window x:Class="gangway_controller.NewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PC104" Height="264" Width="266" Background="#FFFBDB6D">
+    <Grid Margin="0,0,0,-12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="55*"/>
+            <ColumnDefinition Width="78*"/>
+        </Grid.ColumnDefinitions>
+        <Button x:Name="PCdown" Content="PC关机" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="56" Click="PCDown_Click" Margin="25,18,0,0" Foreground="Red" FontWeight="Bold" FontSize="16" Background="#FFEFEFEF" Grid.ColumnSpan="2"/>
+        <Button x:Name="Candown" Content="取消关机" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="55" Click="CancellDown_Click" Margin="31,18,0,0" Foreground="#FFFF2300" FontSize="15" FontWeight="Bold" Background="#FFFDFDFD" Grid.Column="1"/>
+        <Button x:Name="Reapp" Content="重启软件" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="53" Click="restartAPP_Click" Margin="31,89,0,0" Foreground="#FFFF2400" FontWeight="Bold" FontSize="15" Background="#FFFBF9F9" Grid.Column="1"/>
+        <Button x:Name="PCre" Content="PC重启" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="53" Click="restartPC_Click" Margin="25,89,0,0" RenderTransformOrigin="1.476,1.091" Foreground="#FFFF1700" FontSize="15" FontWeight="Bold" Background="#FFFBF7F7" Grid.ColumnSpan="2"/>
+        <Button x:Name="Fastdown" Content="结束延时&#xD;&#xA;快速关机" HorizontalAlignment="Left" VerticalAlignment="Top" Width="88" Height="55" Click="FastDown_Click" Margin="25,158,0,0" Foreground="Red" Background="White" FontWeight="Bold" Grid.ColumnSpan="2"/>
+
+    </Grid>
+</Window>
