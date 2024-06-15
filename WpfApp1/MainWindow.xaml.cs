@@ -411,31 +411,32 @@ namespace gangway_controller
         private bool TryParseFrame()
         {
             for (int i = 0; i <= buffer.Count - 16; i++)//直连17否则16
-            {  
-                 if (buffer[i] == 0xAA && buffer[i + 2] == 0x0C)
-                    {
-                        if (buffer.Count < i + 16) continue;
-                        byte expectedChecksum = buffer[i + 15];
-                         int checksum =( CalculateSumChecksum(buffer.ToArray(), i + 2, i + 14) + 0xFA + 0xAF + 0xF1 ) & 0xFF;      
+            {
+                if (buffer.Count < i + 16) continue;
+                if (buffer[i] == 0xAA && buffer[i + 2] == 0x0C)
+                {
+                       
+                    byte expectedChecksum = buffer[i + 15];
+                    int checksum =( CalculateSumChecksum(buffer.ToArray(), i + 2, i + 14) + 0xFA + 0xAF + 0xF1 ) & 0xFF;      
                     if (expectedChecksum == (byte)checksum)
-                        {
-                             rollRaw = (buffer[i + 3] << 8) | buffer[i + 4];
-                             pitchRaw = (buffer[i + 5] << 8) | buffer[i + 6];
-                             yawRaw = (buffer[i + 7] << 8) | buffer[i + 8];
-                        }
-                    }
-                    if (buffer[i] == 0xFA && buffer[i + 1] == 0xAF && buffer[i + 2] == 0xF1)
                     {
-                        if (buffer.Count < i + 16) continue;
-                        byte expectedChecksum = buffer[i + 16];
-                        byte checksum = CalculateSumChecksum(buffer.ToArray(), i, i + 15);
-                        if (expectedChecksum == checksum)
-                        {
-                             rollRaw = (buffer[i + 4] << 8) | buffer[i + 5];
-                             pitchRaw = (buffer[i + 6] << 8) | buffer[i + 7];
-                             yawRaw = (buffer[i + 8] << 8) | buffer[i + 9];
-                        }
+                        rollRaw = (buffer[i + 3] << 8) | buffer[i + 4];
+                        pitchRaw = (buffer[i + 5] << 8) | buffer[i + 6];
+                        yawRaw = (buffer[i + 7] << 8) | buffer[i + 8];
                     }
+                }
+                if (buffer[i] == 0xFA && buffer[i + 1] == 0xAF && buffer[i + 2] == 0xF1)
+                {
+                    if (buffer.Count < i + 17) continue;
+                    byte expectedChecksum = buffer[i + 16];
+                    byte checksum = CalculateSumChecksum(buffer.ToArray(), i, i + 15);
+                    if (expectedChecksum == checksum)
+                    {
+                            rollRaw = (buffer[i + 4] << 8) | buffer[i + 5];
+                            pitchRaw = (buffer[i + 6] << 8) | buffer[i + 7];
+                            yawRaw = (buffer[i + 8] << 8) | buffer[i + 9];
+                    }
+                }
                 currentRoll = CalculateAngle(rollRaw);
                 currentPitch = CalculateAngle(pitchRaw);
                 currentYaw = CalculateAngle(yawRaw);
@@ -474,43 +475,45 @@ namespace gangway_controller
 
                     // 将新接收的数据添加到缓冲区
                     buffer.AddRange(tempBuffer);
-                   
-                                        
-                        // 解析帧数据并更新姿态数据
-                        bool frameParsed = TryParseFrame();
 
-                        this.Dispatcher.Invoke(() =>
+
+                    // 解析帧数据并更新姿态数据
+                    bool frameParsed = false;
+                    do
                     {
+                        frameParsed = TryParseFrame();
+                    } while (frameParsed);
+
+                    this.Dispatcher.Invoke(() =>
+                        {
                         // 如果选中了HEX显示选项
-                        if (check_HEX.IsChecked == true)
-                        {
-                            if (check_zitai.IsChecked == true)
+                            if (check_HEX.IsChecked == true)
                             {
-                                if (frameParsed)
+                                if (check_zitai.IsChecked == true)
                                 {
-                                    // 仅显示姿态数据
-                                    ReceiveTextBox.AppendText($"Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}\n");
-                                    //{}: 大括号用于指示插入变量的位置。 currentRoll: 这是要插入的变量。假设currentRoll是一个浮点数变量。 :F2: 这是格式说明符。F表示浮点数格式，2表示保留两位小数。
+                                    if (frameParsed)
+                                    {
+                                        // 仅显示姿态数据
+                                        ReceiveTextBox.AppendText($"Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}\n");
+                                        //{}: 大括号用于指示插入变量的位置。 currentRoll: 这是要插入的变量。假设currentRoll是一个浮点数变量。 :F2: 这是格式说明符。F表示浮点数格式，2表示保留两位小数。
 
+                                    }
                                 }
+                                else
+                                {
+                                    string hexData = BitConverter.ToString(tempBuffer).Replace("-", " ");
+                                    ReceiveTextBox.AppendText(hexData + "\n");
+                                }
+
                             }
-                            else
+                            else if (check_ASCII.IsChecked == true)
                             {
-                                string hexData = BitConverter.ToString(tempBuffer).Replace("-", " ");
-                                ReceiveTextBox.AppendText(hexData + "\n");
+                                string receivedData = Encoding.UTF8.GetString(tempBuffer, 0, numBytesRead);
+                                ReceiveTextBox.AppendText(receivedData + "\n");
                             }
-
-                        }
-                        else if (check_ASCII.IsChecked == true)
-                        {
-                            string receivedData = Encoding.UTF8.GetString(tempBuffer, 0, numBytesRead);
-                            ReceiveTextBox.AppendText(receivedData + "\n");
-                        }
-
-
-                        // 确保文本框自动滚动到最后一行
-                        ReceiveTextBox.ScrollToEnd();
-                    });
+                            // 确保文本框自动滚动到最后一行
+                            ReceiveTextBox.ScrollToEnd();
+                         });
                 }
             }
             catch (Exception ex)

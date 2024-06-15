@@ -246,7 +246,7 @@
                     AcceptsReturn="True"
                     IsReadOnly="True"
                     Foreground="Black"
-                    Background="White"
+                    Background="White" 
                     />
 
                 <CheckBox x:Name="check_zitai" RenderTransformOrigin="0.062,1.073" Height="20" Width="18" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,127,0,0" Checked="check_zitai_Checked" Grid.Column="1">
