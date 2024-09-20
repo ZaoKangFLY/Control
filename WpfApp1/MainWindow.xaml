@@ -290,15 +290,19 @@
                     <d3:VerticalAxisTitle Content="角度 (°)" FontSize="20" FontWeight="Bold" />
                     <d3:HorizontalAxisTitle Content="时间 (s)" FontSize="20" FontWeight="Bold"/>
                 </d3:ChartPlotter>
+               
                 <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1" Margin="10">
-
+                    <Button x:Name="ToggleReceiveButton" Content="开始接收" Click="ToggleReceiveButton_Click" Width="100" Height="35" />
                     <ComboBox x:Name="ALLComboBox" Width="100" Margin="10" SelectionChanged="ALL_SelectionChanged">
-
                     </ComboBox>
-                    <Button Content="滚屏" Click="Run_Click" Margin="10" Width="76" />
+                    
+                    <Button Content="刷新" Click="Run_Click" Margin="10" Width="76" />
+                    <Button Content="定屏" Click="Run_See" Width="76" />
                     <Button Content="截图" Click="Grasp_Click" Margin="10" Width="76" />
-                    <Button Content="清屏" Click="Clear_Click" Margin="10" Width="76" />
+                    <Button Content="清屏" Click="Clear_Click" Width="76" />
+                  
                 </StackPanel>
+             
             </Grid>
         </GroupBox>
 

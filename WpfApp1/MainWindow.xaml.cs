@@ -27,6 +27,8 @@ using Microsoft.Research.DynamicDataDisplay.Charts.Axes;
 using Microsoft.Win32;
 using System.Windows.Media.Animation;
 
+
+
 namespace gangway_controller
 {
     /// <summary>
@@ -105,25 +107,7 @@ namespace gangway_controller
 
         #region 实显
         
-        private void Grasp_Click(object sender, RoutedEventArgs e)
-        {
-            SaveFileDialog dlg = new SaveFileDialog(); //文件选择弹出框
-            dlg.Filter = "PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|GIF (*.gif)|*.gif";
-            dlg.FilterIndex = 1;
-            dlg.AddExtension = true;
-            if (dlg.ShowDialog().GetValueOrDefault(false))
-            {
-                string filePath = dlg.FileName;
-                plotter.SaveScreenshot(filePath);//filePath：取得保存的目录
-            }
-        }
-        private void Clear_Click(object sender, RoutedEventArgs e)
-        {
-            // 清除所有曲线数据源
-            rollDataSource.Collection.Clear();
-            pitchDataSource.Collection.Clear();
-            yawDataSource.Collection.Clear();
-        }
+      
         private bool showRoll = true;
         private bool showPitch = true;
         private bool showYaw = true;
@@ -164,10 +148,40 @@ namespace gangway_controller
             }
         }
         public class CustomLabelProvider : LabelProviderBase<double>
+         {
+             private readonly string _unit;
+
+             public CustomLabelProvider(string unit)
+             {
+                 _unit = unit;
+             }
+
+             public override UIElement[] CreateLabels(ITicksInfo<double> ticksInfo)
+             {
+                 var ticks = ticksInfo.Ticks;
+                 var result = new List<UIElement>();
+
+                 foreach (var tick in ticks)
+                 {
+                     var label = new TextBlock
+                     {
+                         Text = $"{(int)tick} {_unit}"
+                        // Text = $"{tick:F2} {_unit}"
+                     };
+                     result.Add(label);
+                 }
+
+                 return result.ToArray();
+             }
+         }
+        
+/*
+        // 用于横坐标的整数标签提供者
+        public class IntegerLabelProvider : LabelProviderBase<double>
         {
             private readonly string _unit;
 
-            public CustomLabelProvider(string unit)
+            public IntegerLabelProvider(string unit)
             {
                 _unit = unit;
             }
@@ -179,10 +193,10 @@ namespace gangway_controller
 
                 foreach (var tick in ticks)
                 {
+                    // 显示整数部分，忽略小数部分
                     var label = new TextBlock
                     {
-                        Text = $"{(int)tick} {_unit}"
-                       // Text = $"{tick:F2} {_unit}"
+                        Text = $"{(int)tick} {_unit}" // 强制转换为整数
                     };
                     result.Add(label);
                 }
@@ -190,10 +204,38 @@ namespace gangway_controller
                 return result.ToArray();
             }
         }
- 
+
+        // 用于纵坐标的小数标签提供者
+        public class DecimalLabelProvider : LabelProviderBase<double>
+        {
+            private readonly string _unit;
+
+            public DecimalLabelProvider(string unit)
+            {
+                _unit = unit;
+            }
+
+            public override UIElement[] CreateLabels(ITicksInfo<double> ticksInfo)
+            {
+                var ticks = ticksInfo.Ticks;
+                var result = new List<UIElement>();
+
+                foreach (var tick in ticks)
+                {
+                    // 保留两位小数
+                    var label = new TextBlock
+                    {
+                        Text = $"{tick:F2} {_unit}" // 保留小数点后两位
+                    };
+                    result.Add(label);
+                }
+
+                return result.ToArray();
+            }
+        }
+*/
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-           
 
             // 将Roll、Pitch和Yaw分别用不同颜色的线添加到图表中
 
@@ -207,22 +249,19 @@ namespace gangway_controller
             ALLComboBox.Items.Add("Roll");
             ALLComboBox.Items.Add("Pitch");
             ALLComboBox.Items.Add("Yaw");
+      
 
 
             // 设置图例可见
             plotter.LegendVisible = true;
 
-            // 自定义标签提供者以设置轴标签格式
-          //  var timeLabelProvider = new CustomLabelProvider("s");
-          //  var angleLabelProvider = new CustomLabelProvider("°");
-
-
+          
             // 添加定时器Tick事件处理程序
             dispatcherTimer.Tick += timer_Tick;
             // 设置定时器间隔为1秒
-             dispatcherTimer.Interval = TimeSpan.FromSeconds(0.1);
+            // dispatcherTimer.Interval = TimeSpan.FromSeconds(0.2);
             // 设置定时器间隔为2毫秒（0.002秒）
-           // dispatcherTimer.Interval = TimeSpan.FromMilliseconds(2);
+            dispatcherTimer.Interval = TimeSpan.FromMilliseconds(2);
 
             // 启用定时器
             dispatcherTimer.Start();
@@ -238,29 +277,124 @@ namespace gangway_controller
         {
             // 更新时间
             currentSecond +=0.1;
-            // 如果解析成功，就将当前角度数据添加到数据源中
+           
+
+        }
+        //截图
+        private void Grasp_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog dlg = new SaveFileDialog(); //文件选择弹出框
+            dlg.Filter = "PNG (*.png)|*.png|JPEG (*.jpg)|*.jpg|BMP (*.bmp)|*.bmp|GIF (*.gif)|*.gif";
+            dlg.FilterIndex = 1;
+            dlg.AddExtension = true;
+            if (dlg.ShowDialog().GetValueOrDefault(false))
+            {
+                string filePath = dlg.FileName;
+                plotter.SaveScreenshot(filePath);//filePath：取得保存的目录
+            }
+        }
+        //
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+ 
+            // 清空数据源
+            rollDataSource.Collection.Clear();
+            pitchDataSource.Collection.Clear();
+            yawDataSource.Collection.Clear();
+
+            // 清空缓冲区
+            buffer.Clear();
+
+            // 重新从 0 开始计时
+            currentSecond = 0;
             if (TryParseFrame())
             {
-                if (buttonbool)
-                {
-                    // 如果滚屏模式启用，更新视口范围
-                    plotter.Viewport.Visible = new Rect(currentSecond - 5, 0, 30, 90); // 显示当前时刻之前30秒的图像
-                }
-                else
-                {
-                    // 如果滚屏模式禁用，自动调整视口以适应数据
-                    plotter.Viewport.FitToView();
-                }
+                plotter.Viewport.Visible = new Rect(currentSecond - 15, -90, 30, 180); // 重新显示最初的30秒
+            }
+            else
+            {
+                plotter.Viewport.FitToView();
             }
         }
 
+        private void Run_See(object sender, RoutedEventArgs e)
+        {
 
+            // 定义当前屏幕内的时间范围：X 轴从 currentSecond - 15 到 currentSecond + 15
+            double startTime = currentSecond - 30;
+            double endTime = currentSecond ;
 
+            // 只取当前屏幕内的数据 (Roll, Pitch, Yaw)
+            var rollPointsInRange = rollDataSource.GetPoints().Where(p => p.X >= startTime && p.X <= endTime);
+            var pitchPointsInRange = pitchDataSource.GetPoints().Where(p => p.X >= startTime && p.X <= endTime);
+            var yawPointsInRange = yawDataSource.GetPoints().Where(p => p.X >= startTime && p.X <= endTime);
 
+            // 获取范围内的最大值和最小值
+            double maxRoll = rollPointsInRange.Any() ? rollPointsInRange.Max(p => p.Y) : 0;
+            double minRoll = rollPointsInRange.Any() ? rollPointsInRange.Min(p => p.Y) : 0;
+
+            double maxPitch = pitchPointsInRange.Any() ? pitchPointsInRange.Max(p => p.Y) : 0;
+            double minPitch = pitchPointsInRange.Any() ? pitchPointsInRange.Min(p => p.Y) : 0;
+
+            double maxYaw = yawPointsInRange.Any() ? yawPointsInRange.Max(p => p.Y) : 0;
+            double minYaw = yawPointsInRange.Any() ? yawPointsInRange.Min(p => p.Y) : 0;
+
+            // 计算当前屏幕内的 Y 轴最大值和最小值
+            double yMax = Math.Max(Math.Max(maxRoll, maxPitch), maxYaw);
+            double yMin = Math.Min(Math.Min(minRoll, minPitch), minYaw);
+
+            // 给 Y 轴加一定的缓冲，比如上下各加 10 个单位
+            double yBuffer = 2;
+            yMax += yBuffer;
+            yMin -= yBuffer;
+
+            // 设置自定义视口范围：X 轴为 currentSecond - 15 到 currentSecond + 15，Y 轴为动态范围
+            plotter.Viewport.Visible = new Rect(startTime, yMin, 30, yMax - yMin);
+            /*
+            // 获取 Roll, Pitch, Yaw 数据的最大值和最小值
+            double maxRoll = rollDataSource.GetPoints().Max(p => p.Y);
+            double minRoll = rollDataSource.GetPoints().Min(p => p.Y);
+            double maxPitch = pitchDataSource.GetPoints().Max(p => p.Y);
+            double minPitch = pitchDataSource.GetPoints().Min(p => p.Y);
+            double maxYaw = yawDataSource.GetPoints().Max(p => p.Y);
+            double minYaw = yawDataSource.GetPoints().Min(p => p.Y);
+
+            // 计算最大值和最小值的范围
+            double yMax = Math.Max(Math.Max(maxRoll, maxPitch), maxYaw);
+            double yMin = Math.Min(Math.Min(minRoll, minPitch), minYaw);
+
+            // 给 Y 轴加一定的缓冲，比如上下各加 10 个单位
+            double yBuffer = 3;
+            yMax += yBuffer;
+            yMin -= yBuffer;
+
+            // 设置自定义视口范围：X 轴为 currentSecond - 15 到 currentSecond + 15，Y 轴为动态范围
+            plotter.Viewport.Visible = new Rect(currentSecond - 30, yMin, 30, yMax - yMin);*/
+        }
         private void Run_Click(object sender, RoutedEventArgs e)
         {
-            buttonbool = !buttonbool;  
+            plotter.Viewport.FitToView();
+
+
         }
+
+        private bool isReceivingData = false; // 初始状态为不接收数据
+        private void ToggleReceiveButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 切换接收数据状态
+            isReceivingData = !isReceivingData;
+
+            // 根据状态改变按钮的文本
+            if (isReceivingData)
+            {
+                ToggleReceiveButton.Content = "停止接收";
+            }
+            else
+            {
+                ToggleReceiveButton.Content = "开始接收";
+            }
+        }
+
         #endregion
 
         #region 串口初始化
@@ -494,60 +628,65 @@ namespace gangway_controller
                 yawDataSource.AppendAsync(base.Dispatcher, yawPoint);
             }
         }
-
+     
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
+            if (!isReceivingData)
+            {
+                // 如果不接收数据，直接返回
+                return;
+            }
             try
-            {
-                while (serialport2.BytesToRead > 0)
-                {
-                    byte[] tempBuffer = new byte[serialport2.BytesToRead];
-                    int numBytesRead = serialport2.Read(tempBuffer, 0, tempBuffer.Length);
-
-                    // 将新接收的数据添加到缓冲区
-                    buffer.AddRange(tempBuffer);
-
-                    // 解析帧数据并更新姿态数据
-                    bool frameParsed;
-                    do
                     {
-                        frameParsed = TryParseFrame();
-                    } while (frameParsed);
+                        while (serialport2.BytesToRead > 0)
+                        {
+                            byte[] tempBuffer = new byte[serialport2.BytesToRead];
+                            int numBytesRead = serialport2.Read(tempBuffer, 0, tempBuffer.Length);
 
-                    this.Dispatcher.Invoke(() =>
+                            // 将新接收的数据添加到缓冲区
+                            buffer.AddRange(tempBuffer);
+
+                            // 解析帧数据并更新姿态数据
+                            bool frameParsed;
+                            do
+                            {
+                                frameParsed = TryParseFrame();
+                            } while (frameParsed);
+
+                            this.Dispatcher.Invoke(() =>
+                            {
+                                // 如果选中了HEX显示选项
+                                if (check_HEX.IsChecked == true)
+                                {
+                                    if (check_zitai.IsChecked == true)
+                                    {
+                                        // 仅显示姿态数据
+                                        ReceiveTextBox.AppendText($"Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}\n");
+                                    }
+                                    else
+                                    {
+                                        string hexData = BitConverter.ToString(tempBuffer).Replace("-", " ");
+                                        ReceiveTextBox.AppendText(hexData + "\n");
+                                    }
+                                }
+                                else if (check_ASCII.IsChecked == true)
+                                {
+                                    string receivedData = Encoding.UTF8.GetString(tempBuffer, 0, numBytesRead);
+                                    ReceiveTextBox.AppendText(receivedData + "\n");
+                                }
+
+                                // 确保文本框自动滚动到最后一行
+                                ReceiveTextBox.ScrollToEnd();
+                            });
+                        }
+                    }
+                    catch (Exception ex)
                     {
-                        // 如果选中了HEX显示选项
-                        if (check_HEX.IsChecked == true)
-                        {
-                            if (check_zitai.IsChecked == true)
-                            {
-                                // 仅显示姿态数据
-                                ReceiveTextBox.AppendText($"Roll: {currentRoll:F2}, Pitch: {currentPitch:F2}, Yaw: {currentYaw:F2}\n");
-                            }
-                            else
-                            {
-                                string hexData = BitConverter.ToString(tempBuffer).Replace("-", " ");
-                                ReceiveTextBox.AppendText(hexData + "\n");
-                            }
-                        }
-                        else if (check_ASCII.IsChecked == true)
-                        {
-                            string receivedData = Encoding.UTF8.GetString(tempBuffer, 0, numBytesRead);
-                            ReceiveTextBox.AppendText(receivedData + "\n");
-                        }
-
-                        // 确保文本框自动滚动到最后一行
-                        ReceiveTextBox.ScrollToEnd();
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                // 将错误信息记录到控制台中
-                Debug.WriteLine($"接收数据时发生错误: {ex.Message}");
-            }
+                        // 将错误信息记录到控制台中
+                        Debug.WriteLine($"接收数据时发生错误: {ex.Message}");
+                    }
         }
-
+               
         /*   private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
 
@@ -2666,10 +2805,11 @@ namespace gangway_controller
 
 
 
-        #endregion
 
         #endregion
 
-      
+        #endregion
+
+
     }
 }
